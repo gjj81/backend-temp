@@ -1,0 +1,88 @@
+# ==================== 开发环境配置 ====================
+spring:
+  # ==================== 数据源配置（开发环境） ====================
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://192.168.30.40:3306/mes_system_dev?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8
+    username: root
+    password: 1234qwer
+    # Druid 连接池配置
+    druid:
+      # 初始连接数
+      initial-size: 5
+      # 最小空闲连接数
+      min-idle: 5
+      # 最大活跃连接数
+      max-active: 20
+      # 连接超时时间（毫秒）
+      max-wait: 60000
+      # 空闲连接检测间隔（毫秒）
+      time-between-eviction-runs-millis: 60000
+      # 连接最小生存时间（毫秒）
+      min-evictable-idle-time-millis: 300000
+      # 连接有效性检测 SQL
+      validation-query: SELECT 1
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      # 监控页面配置
+      stat-view-servlet:
+        enabled: true
+        login-username: admin
+        login-password: admin
+      filter:
+        stat:
+          enabled: true
+          log-slow-sql: true
+          slow-sql-millis: 1000
+        wall:
+          enabled: true
+
+  # ==================== Redis 配置（开发环境） ====================
+  data:
+    redis:
+      host: 192.168.30.22
+      port: 6379
+      password: 1234redis
+      database: 0
+      timeout: 5000ms
+      # 连接池配置
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+
+# ==================== JWT 密钥（环境特有） ====================
+jwt:
+  secret: dev-jwt-secret-key-for-development-only-123456
+  # AccessToken 过期时间（毫秒），30分钟
+  expiration: 1800000
+  # RefreshToken 过期时间（毫秒），7天
+  refreshExpiration: 604800000
+  # Token 头
+  header: Authorization
+  # Token 前缀
+  prefix: Bearer
+
+# ==================== MinIO 配置（开发环境） ====================
+minio:
+  endpoint: http://192.168.30.28:9000
+  access-key: admin
+  secret-key: MinIO@2024!
+  bucket-name: data,images,temp
+  domain: http://192.168.30.28:9000
+
+# ==================== 日志级别（开发环境更详细） ====================
+logging:
+  level:
+    root: INFO
+    com.mes: DEBUG
+    com.mes.mapper: DEBUG
+    org.springframework.web: DEBUG
+    org.mybatis: DEBUG
+
+# ==================== 服务器端口（开发环境） ====================
+server:
+  port: 8080

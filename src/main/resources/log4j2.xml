@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="LOG_PATH">logs</Property>
+        <Property name="LOG_FILE">mes</Property>
+        <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n</Property>
+    </Properties>
+
+    <Appenders>
+        <!-- ========== 控制台输出 ========== -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+        </Console>
+
+        <!-- ========== 主日志文件（压缩 + 自动删除） ========== -->
+        <RollingRandomAccessFile name="FileAppender"
+                                 fileName="${LOG_PATH}/${LOG_FILE}.log"
+                                 filePattern="${LOG_PATH}/${LOG_FILE}-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <Policies>
+                <!-- 按天滚动 -->
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <!-- 按大小滚动（100MB） -->
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <!-- ========== 核心策略：压缩 + 删除 ========== -->
+            <DefaultRolloverStrategy max="50">
+                <Delete basePath="${LOG_PATH}" maxDepth="1">
+                    <!-- ===== 步骤1：压缩超过50个的未压缩文件 ===== -->
+                    <IfFileName glob="mes-*.log" />
+                    <IfAccumulatedFileCount exceeds="50" />
+
+                    <!-- ===== 步骤2：删除超过30天的所有文件（包括压缩包） ===== -->
+                    <IfFileName glob="mes-*.log*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+
+        <!-- ========== 错误日志单独输出 ========== -->
+        <RollingRandomAccessFile name="ErrorFileAppender"
+                                 fileName="${LOG_PATH}/error.log"
+                                 filePattern="${LOG_PATH}/error-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+            <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1" modulate="true"/>
+                <SizeBasedTriggeringPolicy size="100MB"/>
+            </Policies>
+            <DefaultRolloverStrategy max="50">
+                <Delete basePath="${LOG_PATH}" maxDepth="1">
+                    <!-- 压缩超过50个的 error 日志 -->
+                    <IfFileName glob="error-*.log" />
+                    <IfAccumulatedFileCount exceeds="50" />
+
+                    <!-- 删除超过30天的 error 日志（包括压缩包） -->
+                    <IfFileName glob="error-*.log*" />
+                    <IfLastModified age="30d" />
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingRandomAccessFile>
+    </Appenders>
+
+    <!-- ========== 异步日志配置 ========== -->
+    <Loggers>
+        <AsyncLogger name="com.mes" level="DEBUG" includeLocation="true">
+            <AppenderRef ref="FileAppender"/>
+            <AppenderRef ref="ErrorFileAppender"/>
+        </AsyncLogger>
+
+        <AsyncLogger name="com.mes" level="DEBUG" additivity="false">
+            <AppenderRef ref="Console"/>
+        </AsyncLogger>
+
+        <AsyncLogger name="org.springframework" level="WARN"/>
+        <AsyncLogger name="org.mybatis" level="WARN"/>
+        <AsyncLogger name="com.alibaba.druid" level="WARN"/>
+        <AsyncLogger name="io.netty" level="WARN"/>
+        <AsyncLogger name="io.lettuce" level="WARN"/>
+
+        <AsyncRoot level="INFO">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileAppender"/>
+            <AppenderRef ref="ErrorFileAppender"/>
+        </AsyncRoot>
+    </Loggers>
+</Configuration>

@@ -1,0 +1,98 @@
+# ==================== Spring Boot 基础配置 ====================
+spring:
+  # 激活的环境（dev:开发, test:测试, prod:生产）
+  profiles:
+    active: dev
+
+  # ==================== 应用名称 ====================
+  application:
+    name: mes-system
+
+  # ==================== Web 配置 ====================
+  web:
+    resources:
+      add-mappings: true
+    locale: zh_CN
+    locale-resolver: fixed
+
+  # ==================== 文件上传配置 ====================
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB        # 单个文件最大 50MB
+      max-request-size: 200MB    # 总请求大小 200MB
+      file-size-threshold: 2MB   # 超过 2MB 写入磁盘
+
+  # ==================== Jackson 序列化配置 ====================
+  jackson:
+    # 日期格式
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    # 序列化时忽略 null 值
+    default-property-inclusion: non_null
+    # 序列化枚举使用名称
+    serialization:
+      write-dates-as-timestamps: false
+    # 反序列化时忽略未知属性
+    deserialization:
+      fail-on-unknown-properties: false
+
+# ==================== 服务器配置 ====================
+server:
+  port: 8080
+  servlet:
+    context-path: /mes
+  # Tomcat 配置
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 200
+    min-spare-threads: 10
+    max-connections: 10000
+    connection-timeout: 5000
+
+# ==================== 日志配置 ====================
+logging:
+  # 使用 log4j2.xml 配置文件
+  config: classpath:log4j2.xml
+  # 日志级别（会覆盖 log4j2.xml 中的配置）
+  level:
+    root: INFO
+    com.mes: DEBUG
+    org.springframework: WARN
+    org.mybatis: WARN
+    com.alibaba.druid: WARN
+
+# ==================== MyBatis 配置 ====================
+mybatis:
+  # mapper XML 文件位置
+  mapper-locations: classpath:mapper/*.xml
+  # 实体类包路径（用于别名）
+  type-aliases-package: com.mes.entity
+  # 开启驼峰命名转换
+  configuration:
+    map-underscore-to-camel-case: true
+    # 开启缓存
+    cache-enabled: true
+    # 开启延迟加载
+    lazy-loading-enabled: true
+    # 开启日志（开发用）
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+# ==================== PageHelper 分页配置 ====================
+pagehelper:
+  helper-dialect: mysql
+  reasonable: true
+  support-methods-arguments: true
+  params: count=countSql
+
+
+
+# ==================== 自定义业务配置 ====================
+mes:
+  # 文件上传路径
+  upload:
+    path: ./uploads
+    temp-path: ./uploads/temp
+  # 密码加密盐值
+  password:
+    salt: mes-salt-2024

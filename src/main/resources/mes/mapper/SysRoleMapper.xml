@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mes.mapper.SysRoleMapper">
+
+    <resultMap id="BaseResultMap" type="mes.entity.SysRole">
+            <id property="roleId" column="role_id" />
+            <result property="roleCode" column="role_code" />
+            <result property="roleName" column="role_name" />
+            <result property="dataScope" column="data_scope" />
+            <result property="isSystem" column="is_system" />
+            <result property="status" column="status" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        role_id,role_code,role_name,data_scope,is_system,status
+    </sql>
+    <select id="selectCodeList" resultType="java.lang.String">
+        select r.role_code
+        from sys_role r
+                 inner join sys_user_role ur on r.role_id = ur.role_id
+                 inner join sys_user u on ur.user_id = u.user_id
+        where u.user_id = #{userId} and r.deleted = 0 and r.status = 1
+
+    </select>
+
+
+</mapper>
