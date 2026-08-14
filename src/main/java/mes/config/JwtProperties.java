@@ -12,5 +12,10 @@ public class JwtProperties {
     private Long expiration;
     private Long refreshExpiration;
     private String header;
+    // 默认前缀为Bearer
     private String prefix;
+    private String refreshKeyPrefix;
+    private String metaKeyPrefix;
+
+
 }

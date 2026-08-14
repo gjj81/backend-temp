@@ -2,10 +2,13 @@ package mes.common.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import mes.common.result.Result;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -31,6 +34,25 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public Result<?> handleAccessDenied(AccessDeniedException e) {
         return Result.error(403, "无权限访问");
+    }
+
+    @ExceptionHandler(MissingRequestHeaderException.class)
+    public Result<?> handleMissingHeader(MissingRequestHeaderException e) {
+        return Result.error(400, "缺少必要请求头: " + e.getHeaderName());
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public Result<?> handleValidation(MethodArgumentNotValidException e) {
+        String msg = e.getBindingResult().getFieldErrors().stream()
+                .map(err -> err.getField() + ": " + err.getDefaultMessage())
+                .reduce((a, b) -> a + "; " + b)
+                .orElse("参数校验失败");
+        return Result.error(400, msg);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public Result<?> handleBadRequest(HttpMessageNotReadableException e) {
+        return Result.error(400, "请求体格式错误");
     }
 
     @ExceptionHandler(Exception.class)

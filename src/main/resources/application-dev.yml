@@ -65,6 +65,10 @@ jwt:
   header: Authorization
   # Token 前缀
   prefix: Bearer
+  # 版本号存储：mes:token:meta:{userId} → Hash { "version": 时间戳 }
+  meta-key-prefix: "mes:token:meta:"
+  # 刷新令牌存储：mes:refresh:{userId}:{deviceType} → String
+  refresh-key-prefix: "mes:refresh:"
 
 # ==================== MinIO 配置（开发环境） ====================
 minio:

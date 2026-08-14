@@ -16,7 +16,7 @@ public class SecurityUser implements UserDetails {
     @JsonIgnore // 忽略密码字段
     private String password;
     private Integer status;
-    private List<GrantedAuthority> authorities;
+    private List<GrantedAuthority> authorities;// 权限列表
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -40,20 +40,20 @@ public class SecurityUser implements UserDetails {
     @Override
     public boolean isAccountNonExpired() {
         return true;
-    }
+    }// 账号是否未过期
 
     @Override
     public boolean isAccountNonLocked() {
         return true;
-    }
+    }// 账号是否未锁定
 
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
-    }
+    }// 凭证是否未过期
 
     @Override
     public boolean isEnabled() {
         return status != null && status == 1;
-    }
+    }// 账号是否启用
 }

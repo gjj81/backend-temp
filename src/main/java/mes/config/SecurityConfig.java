@@ -59,10 +59,9 @@ public class SecurityConfig {
                                 .requestMatchers("/api/auth/**").permitAll() // 允许访问登录接口
                                 .anyRequest().authenticated() // 其他请求都需要认证
                 ) // 授权请求
-                .exceptionHandling(
-                        exception ->
-                                exception.accessDeniedHandler(jwtAccessDeniedHandler) // 配置无权限访问处理类
-                                        .authenticationEntryPoint(jwtAuthenticationEntryPoint) // 配置认证入口点类
+                .exceptionHandling(e -> e
+                        .authenticationEntryPoint(jwtAuthenticationEntryPoint)   // 没认证 → 401
+                        .accessDeniedHandler(jwtAccessDeniedHandler)            // 有认证但没权限 → 403
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class); // 在UsernamePasswordAuthenticationFilter之前添加JwtAuthenticationFilter过滤器
         return http.build();
