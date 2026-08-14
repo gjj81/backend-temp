@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mes.mapper.SysUserDeptMapper">
+
+    <resultMap id="BaseResultMap" type="mes.entity.SysUserDept">
+            <id property="userId" column="user_id" />
+            <id property="deptId" column="dept_id" />
+            <result property="isPrimary" column="is_primary" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        user_id,dept_id,is_primary
+    </sql>
+
+    
+</mapper>

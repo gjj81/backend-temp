@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mes.mapper.SysOperLogMapper">
+
+    <resultMap id="BaseResultMap" type="mes.entity.SysOperLog">
+            <id property="logId" column="log_id" />
+            <result property="title" column="title" />
+            <result property="operType" column="oper_type" />
+            <result property="method" column="method" />
+            <result property="requestUrl" column="request_url" />
+            <result property="operUser" column="oper_user" />
+            <result property="jsonParam" column="json_param" />
+            <result property="jsonResult" column="json_result" />
+            <result property="status" column="status" />
+            <result property="operTime" column="oper_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        log_id,title,oper_type,method,request_url,oper_user,
+        json_param,json_result,status,oper_time
+    </sql>
+
+
+</mapper>

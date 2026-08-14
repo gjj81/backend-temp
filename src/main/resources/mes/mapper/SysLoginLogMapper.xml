@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mes.mapper.SysLoginLogMapper">
+
+    <resultMap id="BaseResultMap" type="mes.entity.SysLoginLog">
+            <id property="loginId" column="login_id" />
+            <result property="username" column="username" />
+            <result property="status" column="status" />
+            <result property="loginTime" column="login_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        login_id,username,status,login_time
+    </sql>
+
+
+</mapper>

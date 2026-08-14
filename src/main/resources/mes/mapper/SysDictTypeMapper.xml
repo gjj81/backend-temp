@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mes.mapper.SysDictTypeMapper">
+
+    <resultMap id="BaseResultMap" type="mes.entity.SysDictType">
+            <id property="dictTypeId" column="dict_type_id" />
+            <result property="dictName" column="dict_name" />
+            <result property="dictType" column="dict_type" />
+            <result property="status" column="status" />
+            <result property="deleted" column="deleted" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        dict_type_id,dict_name,dict_type,status,deleted
+    </sql>
+
+
+</mapper>
