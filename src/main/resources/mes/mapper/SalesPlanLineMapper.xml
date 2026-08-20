@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mes.mapper.SalesPlanLineMapper">
+
+    <resultMap id="BaseResultMap" type="mes.entity.SalesPlanLine">
+        <id column="line_id" property="lineId"/>
+        <result column="plan_id" property="planId"/>
+        <result column="product_id" property="productId"/>
+        <result column="total_quantity" property="totalQuantity"/>
+        <result column="forecast_quantity" property="forecastQuantity"/>
+        <result column="opening_inventory" property="openingInventory"/>
+        <result column="scheduled_quantity" property="scheduledQuantity"/>
+        <result column="finished_quantity" property="finishedQuantity"/>
+        <result column="delivered_quantity" property="deliveredQuantity"/>
+        <result column="status" property="status"/>
+        <result column="deleted" property="deleted"/>
+        <result column="version" property="version"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+    <update id="deleteByPrimaryKey">
+        update sales_plan_line
+        set deleted = 1,
+        version = version + 1
+        where line_id = #{planLineId}
+        and version = #{version}
+        and deleted = 0
+    </update>
+    <update id="deleteByPlanId">
+        update sales_plan_line
+        set deleted = 1,
+        version = version + 1
+        where plan_id = #{planId}
+        and deleted = 0
+    </update>
+
+    <update id="updateByPrimaryKey">
+        UPDATE sales_plan_line
+        <set>
+            version = version + 1,
+            <if test="productId != null">product_id = #{productId},</if>
+            <if test="productName != null">product_name = #{productName},</if>
+            <if test="totalQuantity != null">total_quantity = #{totalQuantity},</if>
+            <if test="forecastQuantity != null">forecast_quantity = #{forecastQuantity},</if>
+            <if test="openingInventory != null">opening_inventory = #{openingInventory},</if>
+            <if test="scheduledQuantity != null">scheduled_quantity = #{scheduledQuantity},</if>
+            <if test="finishedQuantity != null">finished_quantity = #{finishedQuantity},</if>
+            <if test="deliveredQuantity != null">delivered_quantity = #{deliveredQuantity},</if>
+            <if test="status != null">status = #{status},</if>
+        </set>
+        where line_id = #{lineId}
+        and version = #{version}
+        and deleted = 0
+    </update>
+    <insert id="batchInsert">
+        INSERT INTO sales_plan_line(
+                line_id,
+                plan_id,
+                product_id,
+                product_name,
+                total_quantity,
+                forecast_quantity,
+                opening_inventory,
+                scheduled_quantity,
+                finished_quantity,
+                delivered_quantity,
+            )values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.lineId},#{item.planId},#{item.productId},#{item.productName},#{item.totalQuantity},#{item.forecastQuantity},#{item.openingInventory},#{item.scheduledQuantity},#{item.finishedQuantity},#{item.deliveredQuantity})
+        </foreach>
+    </insert>
+    <insert id="insert">
+        INSERT INTO sales_plan_line(
+                line_id,
+                plan_id,
+                product_id,
+                product_name,
+                total_quantity,
+                forecast_quantity,
+                opening_inventory,
+                scheduled_quantity,
+                finished_quantity,
+                delivered_quantity,
+            )values
+        (#{lineId},#{planId},#{productId},#{productName},#{totalQuantity},#{forecastQuantity},#{openingInventory},#{scheduledQuantity},#{finishedQuantity},#{deliveredQuantity})
+    </insert>
+
+    <select id="selectPlanLineIdList" resultType="java.lang.String">
+        select line_id
+        from sales_plan_line
+        where plan_id = #{planId}
+        and deleted = 0
+    </select>
+
+
+</mapper>

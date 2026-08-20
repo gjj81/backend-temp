@@ -3,7 +3,7 @@ spring:
   # ==================== 数据源配置（开发环境） ====================
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.30.40:3306/mes_system_dev?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8
+    url: jdbc:mysql://192.168.30.40:3306/mes_system_dev?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=false&serverTimezone=GMT%2B8&allowMultiQueries=true&allowPublicKeyRetrieval=true
     username: root
     password: 1234qwer
     # Druid 连接池配置
@@ -23,7 +23,7 @@ spring:
       # 连接有效性检测 SQL
       validation-query: SELECT 1
       test-while-idle: true
-      test-on-borrow: false
+      test-on-borrow: true
       test-on-return: false
       # 监控页面配置
       stat-view-servlet:

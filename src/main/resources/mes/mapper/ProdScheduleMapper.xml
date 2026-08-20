@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mes.mapper.ProdScheduleMapper">
+
+    <resultMap id="BaseResultMap" type="mes.entity.ProdSchedule">
+            <id property="scheduleId" column="schedule_id" />
+            <result property="lineId" column="line_id" />
+            <result property="scheduleDate" column="schedule_date" />
+            <result property="quantity" column="quantity" />
+            <result property="workshopId" column="workshop_id" />
+            <result property="workshopName" column="workshop_name" />
+            <result property="isOverCapacity" column="is_over_capacity" />
+            <result property="actualQuantity" column="actual_quantity" />
+            <result property="qualifiedQuantity" column="qualified_quantity" />
+            <result property="defectQuantity" column="defect_quantity" />
+            <result property="status" column="status" />
+            <result property="remark" column="remark" />
+            <result property="version" column="version" />
+            <result property="createBy" column="create_by" />
+            <result property="createTime" column="create_time" />
+            <result property="updateBy" column="update_by" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        schedule_id,line_id,schedule_date,quantity,workshop_id,workshop_name,
+        is_over_capacity,actual_quantity,qualified_quantity,defect_quantity,status,
+        remark,version,create_by,create_time,update_by,
+        update_time
+    </sql>
+
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List" />
+        from prod_schedule
+        where  schedule_id = #{scheduleId} 
+    </select>
+
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete from prod_schedule
+        where  schedule_id = #{scheduleId} 
+    </delete>
+    <insert id="insert" keyColumn="schedule_id" keyProperty="scheduleId" parameterType="mes.entity.ProdSchedule" useGeneratedKeys="true">
+        insert into prod_schedule
+        ( schedule_id,line_id,schedule_date,quantity,workshop_id,workshop_name,
+        is_over_capacity,actual_quantity,qualified_quantity,defect_quantity,status,
+        remark,version,create_by,create_time,update_by,
+        update_time)
+        values (#{scheduleId},#{lineId},#{scheduleDate},#{quantity},#{workshopId},#{workshopName},
+        #{isOverCapacity},#{actualQuantity},#{qualifiedQuantity},#{defectQuantity},#{status},
+        #{remark},#{version},#{createBy},#{createTime},#{updateBy},
+        #{updateTime})
+    </insert>
+    <insert id="insertSelective" keyColumn="schedule_id" keyProperty="scheduleId" parameterType="mes.entity.ProdSchedule" useGeneratedKeys="true">
+        insert into prod_schedule
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+                <if test="scheduleId != null">schedule_id,</if>
+                <if test="lineId != null">line_id,</if>
+                <if test="scheduleDate != null">schedule_date,</if>
+                <if test="quantity != null">quantity,</if>
+                <if test="workshopId != null">workshop_id,</if>
+                <if test="workshopName != null">workshop_name,</if>
+                <if test="isOverCapacity != null">is_over_capacity,</if>
+                <if test="actualQuantity != null">actual_quantity,</if>
+                <if test="qualifiedQuantity != null">qualified_quantity,</if>
+                <if test="defectQuantity != null">defect_quantity,</if>
+                <if test="status != null">status,</if>
+                <if test="remark != null">remark,</if>
+                <if test="version != null">version,</if>
+                <if test="createBy != null">create_by,</if>
+                <if test="createTime != null">create_time,</if>
+                <if test="updateBy != null">update_by,</if>
+                <if test="updateTime != null">update_time,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+                <if test="scheduleId != null">#{scheduleId},</if>
+                <if test="lineId != null">#{lineId},</if>
+                <if test="scheduleDate != null">#{scheduleDate},</if>
+                <if test="quantity != null">#{quantity},</if>
+                <if test="workshopId != null">#{workshopId},</if>
+                <if test="workshopName != null">#{workshopName},</if>
+                <if test="isOverCapacity != null">#{isOverCapacity},</if>
+                <if test="actualQuantity != null">#{actualQuantity},</if>
+                <if test="qualifiedQuantity != null">#{qualifiedQuantity},</if>
+                <if test="defectQuantity != null">#{defectQuantity},</if>
+                <if test="status != null">#{status},</if>
+                <if test="remark != null">#{remark},</if>
+                <if test="version != null">#{version},</if>
+                <if test="createBy != null">#{createBy},</if>
+                <if test="createTime != null">#{createTime},</if>
+                <if test="updateBy != null">#{updateBy},</if>
+                <if test="updateTime != null">#{updateTime},</if>
+        </trim>
+    </insert>
+    <update id="updateByPrimaryKeySelective" parameterType="mes.entity.ProdSchedule">
+        update prod_schedule
+        <set>
+                <if test="lineId != null">
+                    line_id = #{lineId},
+                </if>
+                <if test="scheduleDate != null">
+                    schedule_date = #{scheduleDate},
+                </if>
+                <if test="quantity != null">
+                    quantity = #{quantity},
+                </if>
+                <if test="workshopId != null">
+                    workshop_id = #{workshopId},
+                </if>
+                <if test="workshopName != null">
+                    workshop_name = #{workshopName},
+                </if>
+                <if test="isOverCapacity != null">
+                    is_over_capacity = #{isOverCapacity},
+                </if>
+                <if test="actualQuantity != null">
+                    actual_quantity = #{actualQuantity},
+                </if>
+                <if test="qualifiedQuantity != null">
+                    qualified_quantity = #{qualifiedQuantity},
+                </if>
+                <if test="defectQuantity != null">
+                    defect_quantity = #{defectQuantity},
+                </if>
+                <if test="status != null">
+                    status = #{status},
+                </if>
+                <if test="remark != null">
+                    remark = #{remark},
+                </if>
+                <if test="version != null">
+                    version = #{version},
+                </if>
+                <if test="createBy != null">
+                    create_by = #{createBy},
+                </if>
+                <if test="createTime != null">
+                    create_time = #{createTime},
+                </if>
+                <if test="updateBy != null">
+                    update_by = #{updateBy},
+                </if>
+                <if test="updateTime != null">
+                    update_time = #{updateTime},
+                </if>
+        </set>
+        where   schedule_id = #{scheduleId} 
+    </update>
+    <update id="updateByPrimaryKey" parameterType="mes.entity.ProdSchedule">
+        update prod_schedule
+        set 
+            line_id =  #{lineId},
+            schedule_date =  #{scheduleDate},
+            quantity =  #{quantity},
+            workshop_id =  #{workshopId},
+            workshop_name =  #{workshopName},
+            is_over_capacity =  #{isOverCapacity},
+            actual_quantity =  #{actualQuantity},
+            qualified_quantity =  #{qualifiedQuantity},
+            defect_quantity =  #{defectQuantity},
+            status =  #{status},
+            remark =  #{remark},
+            version =  #{version},
+            create_by =  #{createBy},
+            create_time =  #{createTime},
+            update_by =  #{updateBy},
+            update_time =  #{updateTime}
+        where   schedule_id = #{scheduleId} 
+    </update>
+</mapper>

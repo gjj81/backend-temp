@@ -107,11 +107,11 @@ public class JwtTokenProvider {
     public int validateToken(String token) {
         Claims claims = parseSafely(token);
         if (claims == null) {
-            return TOKEN_INVALID;
+            return TOKEN_INVALID;// 无效（签名错/被篡改/格式错）
         } else if (claims.getExpiration().before(new Date())) {
-            return TOKEN_EXPIRED;
+            return TOKEN_EXPIRED;// 过期（时间到了）
         } else {
-            return TOKEN_VALID;
+            return TOKEN_VALID;// 合法（签名对+没过期）
         }
     }
 

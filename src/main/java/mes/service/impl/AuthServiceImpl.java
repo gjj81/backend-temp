@@ -7,6 +7,7 @@ import mes.config.JwtProperties;
 import mes.dto.LoginDTO;
 import mes.security.SecurityUser;
 import mes.service.AuthService;
+import mes.service.MenuService;
 import mes.service.RedisTokenService;
 import mes.util.JwtTokenProvider;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,15 +26,17 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final JwtProperties jwtProperties;
     private final RedisTokenService redisTokenService;
+    private final MenuService menuService;
 
     public AuthServiceImpl(AuthenticationManager authenticationManager,
                            JwtTokenProvider jwtTokenProvider,
                            JwtProperties jwtProperties,
-                           RedisTokenService redisTokenService) {
+                           RedisTokenService redisTokenService, MenuService menuService) {
         this.authenticationManager = authenticationManager;
         this.jwtTokenProvider = jwtTokenProvider;
         this.jwtProperties = jwtProperties;
         this.redisTokenService = redisTokenService;
+        this.menuService = menuService;
     }
 
 
@@ -66,6 +69,10 @@ public class AuthServiceImpl implements AuthService {
         data.put("userId", userId);
         data.put("username", username);
         data.put("deviceType", deviceType);
+
+        MenuService.MenuResult menuResult = menuService.loadUserMenus(userId);
+        data.put("menus", menuResult.menus());// 菜单列表
+        data.put("permissions", menuResult.permissions());// 权限列表
 
         log.info("用户登录成功: userId={}, deviceType={}", userId, deviceType);
         return Result.success(data);

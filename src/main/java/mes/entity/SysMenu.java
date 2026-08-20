@@ -3,7 +3,7 @@ package mes.entity;
 import lombok.Data;
 
 /**
- * 菜单权限
+ * 菜单权限表
  * @TableName sys_menu
  */
 @Data
@@ -14,12 +14,12 @@ public class SysMenu {
     private String menuId;
 
     /**
-     * 父菜单id 0=顶级
+     * 父菜单id，0=顶级
      */
     private String parentId;
 
     /**
-     * 
+     * 菜单名称
      */
     private String menuName;
 
@@ -34,12 +34,12 @@ public class SysMenu {
     private String icon;
 
     /**
-     * 图标路径
+     * 前端路由路径
      */
     private String path;
 
     /**
-     * 组件路径
+     * 前端组件路径
      */
     private String component;
 
@@ -49,7 +49,12 @@ public class SysMenu {
     private String query;
 
     /**
-     * 权限标识,如sys:user:add
+     * 后端接口URL，如/api/user/list，用于动态权限拦截
+     */
+    private String apiUrl;
+
+    /**
+     * 权限标识，如sys:user:add
      */
     private String perms;
 
@@ -69,7 +74,7 @@ public class SysMenu {
     private Integer status;
 
     /**
-     * 0-未删除 其余都删除 
+     * 逻辑删除：0-正常 1-删除
      */
     private Integer deleted;
 
@@ -98,6 +103,7 @@ public class SysMenu {
             && (this.getPath() == null ? other.getPath() == null : this.getPath().equals(other.getPath()))
             && (this.getComponent() == null ? other.getComponent() == null : this.getComponent().equals(other.getComponent()))
             && (this.getQuery() == null ? other.getQuery() == null : this.getQuery().equals(other.getQuery()))
+            && (this.getApiUrl() == null ? other.getApiUrl() == null : this.getApiUrl().equals(other.getApiUrl()))
             && (this.getPerms() == null ? other.getPerms() == null : this.getPerms().equals(other.getPerms()))
             && (this.getVisible() == null ? other.getVisible() == null : this.getVisible().equals(other.getVisible()))
             && (this.getIsCache() == null ? other.getIsCache() == null : this.getIsCache().equals(other.getIsCache()))
@@ -118,6 +124,7 @@ public class SysMenu {
         result = prime * result + ((getPath() == null) ? 0 : getPath().hashCode());
         result = prime * result + ((getComponent() == null) ? 0 : getComponent().hashCode());
         result = prime * result + ((getQuery() == null) ? 0 : getQuery().hashCode());
+        result = prime * result + ((getApiUrl() == null) ? 0 : getApiUrl().hashCode());
         result = prime * result + ((getPerms() == null) ? 0 : getPerms().hashCode());
         result = prime * result + ((getVisible() == null) ? 0 : getVisible().hashCode());
         result = prime * result + ((getIsCache() == null) ? 0 : getIsCache().hashCode());
@@ -141,6 +148,7 @@ public class SysMenu {
         sb.append(", path=").append(path);
         sb.append(", component=").append(component);
         sb.append(", query=").append(query);
+        sb.append(", apiUrl=").append(apiUrl);
         sb.append(", perms=").append(perms);
         sb.append(", visible=").append(visible);
         sb.append(", isCache=").append(isCache);

@@ -1,6 +1,7 @@
 package mes.mapper;
 
 import mes.entity.SysMenu;
+import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
 
@@ -10,11 +11,15 @@ import java.util.List;
 * @createDate 2026-08-14 09:16:09
 * @Entity mes.entity.SysMenu
 */
+@Mapper
 public interface SysMenuMapper {
 
 
-    List<String> selectPermsByUserId(String userId);
+    List<String> selectPermsByUserId(String userId);// 根据用户ID查询权限列表
 
-    List<SysMenu> selectUrlPermissions();
+    List<SysMenu> selectUrlPermissions();// 查询所有URL权限菜单
+
+    List<SysMenu> selectMenusByUserId(String userId);// 根据用户ID查询菜单列表
+
 
 }

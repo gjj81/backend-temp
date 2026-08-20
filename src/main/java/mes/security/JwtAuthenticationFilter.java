@@ -6,28 +6,31 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import mes.mapper.SysRoleMapper;
 import mes.service.RedisTokenService;
 import mes.util.JwtTokenProvider;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.List;
 
 @Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtTokenProvider jwtTokenProvider;
     private final RedisTokenService redisTokenService;
+    private final SysRoleMapper sysRoleMapper;
 
-    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, RedisTokenService redisTokenService) {
+    public JwtAuthenticationFilter(JwtTokenProvider jwtTokenProvider, RedisTokenService redisTokenService, SysRoleMapper sysRoleMapper) {
         this.jwtTokenProvider = jwtTokenProvider;
         this.redisTokenService = redisTokenService;
+        this.sysRoleMapper = sysRoleMapper;
     }
 
     @Override
@@ -59,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String tokenType = claims.get("type", String.class);
         String deviceType = claims.get("deviceType", String.class);
         Long tokenVersion = claims.get("version") != null ?
-                ((Number) claims.get("version")).longValue() : null;
+                ((Number) claims.get("version")).longValue() : null;// 兼容旧版本token，新版token没有version字段
 
         if (!"access".equals(tokenType)) {
             log.warn("非AccessToken被拦截: type={}, uri={}", tokenType, request.getRequestURI());
@@ -80,7 +83,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         securityUser.setUsername(username);
         securityUser.setPassword("");
         securityUser.setStatus(1);
-        securityUser.setAuthorities(Collections.emptyList());// 暂时赋予空权限,后续根据角色动态添加权限
+        securityUser.setAuthorities(loadAuthorities(userId));// 加载用户权限
 
         UsernamePasswordAuthenticationToken authentication =
                 new UsernamePasswordAuthenticationToken(
@@ -89,6 +92,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         filterChain.doFilter(request, response);
 
+    }
+
+    private List<SimpleGrantedAuthority> loadAuthorities(String userId) {
+        List<SimpleGrantedAuthority> authorities  = new ArrayList<>();
+        try {
+            List<String> roleCodes = sysRoleMapper.selectCodeList(userId);// 角色编码列表
+            if (roleCodes != null && !roleCodes.isEmpty()) {
+            // 转换角色编码为权限标识，例如：
+            // ROLE_ADMIN -> new SimpleGrantedAuthority("ROLE_ADMIN")
+            roleCodes.forEach(roleCode -> authorities.add(new SimpleGrantedAuthority(roleCode)));
+                }
+            } catch (Exception e) {
+            log.error("加载用户权限失败", e);
+        }
+        return authorities;
     }
 
     private String resolveToken(HttpServletRequest request) {

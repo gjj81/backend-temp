@@ -45,4 +45,8 @@ public class PageResponse<T> {
         this.hasNextPage = pageNum < this.pages;
         this.hasPreviousPage = pageNum > 1;
     }
+
+    public PageResponse(List<T> list, long total, int pageNum, int pageSize) {
+        this(list, Long.valueOf(total), Long.valueOf(pageNum), Long.valueOf(pageSize));
+    }
 }

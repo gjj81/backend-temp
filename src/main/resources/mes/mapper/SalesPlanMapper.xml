@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mes.mapper.SalesPlanMapper">
+
+    <resultMap id="BaseResultMap" type="mes.entity.SalesPlan">
+        <id property="planId" column="plan_id" />
+        <result property="planNo" column="plan_no" />
+        <result property="customer" column="customer" />
+        <result property="planMonth" column="plan_month" />
+        <result property="planType" column="plan_type" />
+        <result property="status" column="status" />
+        <result property="remark" column="remark" />
+        <result property="deleted" column="deleted" />
+        <result property="version" column="version" />
+        <result property="createBy" column="create_by" />
+        <result property="createTime" column="create_time" />
+        <result property="updateBy" column="update_by" />
+        <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        plan_id,plan_no,customer,plan_month,plan_type,status,
+        remark,deleted,version,create_by,create_time,
+        update_by,update_time
+    </sql>
+
+    <insert id="insert">
+        insert into sales_plan
+        (plan_id, plan_no, customer, plan_month, plan_type, status, remark)
+        values
+        (#{planId},#{planNo},#{customer},#{planMonth},#{planType},#{status},#{remark})
+    </insert>
+
+    <update id="deleteByPrimaryKey">
+        update sales_plan
+        set deleted = 1,
+            version = version + 1,
+        where plan_id = #{planId}
+          and version = #{version}
+          and  status = 0
+          and deleted = 0
+    </update>
+    <update id="updateByPrimaryKey" >
+        update sales_plan
+        <set>
+            version = version + 1,
+
+            <if test="planNo != null">
+                plan_no = #{planNo},
+            </if>
+            <if test="customer != null">
+                customer = #{customer},
+            </if>
+            <if test="planMonth != null">
+                plan_month = #{planMonth},
+            </if>
+            <if test="planType != null">
+                plan_type = #{planType},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="remark != null">
+                remark = #{remark},
+            </if>
+        </set>
+        where plan_id = #{planId}
+          and version = #{version}
+          and status = 0
+          and deleted = 0
+    </update>
+
+    <!-- 第三层：交货节点映射 -->
+    <resultMap id="DeliveryResultMap" type="mes.vo.sales.SalesPlanDeliveryVO">
+        <id column="delivery_id" property="deliveryId"/>
+        <result column="node_name" property="nodeName"/>
+        <result column="delivery_date" property="deliveryDate"/>
+        <result column="plan_quantity" property="planQuantity"/>
+        <result column="deliveryVersion" property="version"/>
+        <result column="deliveryStatus" property="status"/>
+    </resultMap>
+
+    <!-- 第二层：产品行映射（包含第三层集合） -->
+    <resultMap id="LineResultMap" type="mes.vo.sales.SalesPlanLineVO">
+        <id column="line_id" property="lineId"/>
+        <result column="product_name" property="productName"/>
+        <result column="total_quantity" property="totalQuantity"/>
+        <result column="forecast_quantity" property="forecastQuantity"/>
+        <result column="opening_inventory" property="openingInventory"/>
+        <result column="lineStatus" property="status"/>
+        <result column="lineVersion" property="version"/>
+        <collection property="deliveries" ofType="mes.vo.sales.SalesPlanDeliveryVO" resultMap="DeliveryResultMap"/>
+    </resultMap>
+
+    <!-- 第一层：销售计划映射（包含第二层集合） -->
+    <resultMap id="PlanResultMap" type="mes.vo.sales.SalesPlanVO">
+        <id column="plan_id" property="planId"/>
+        <result column="plan_no" property="planNo"/>
+        <result column="plan_month" property="planMonth"/>
+        <result column="customer" property="customer"/>
+        <result column="planStatus" property="status"/>
+        <result column="planVersion" property="version"/>
+        <collection property="lines" ofType="mes.vo.sales.SalesPlanLineVO" resultMap="LineResultMap"/>
+    </resultMap>
+
+    <!-- 连表查询，Mapper 层直接组装三层结构 -->
+    <select id="selectByPlanMonth" resultMap="PlanResultMap">
+        SELECT
+            s.plan_no,
+            s.plan_id,
+            s.customer,
+            s.status as planStatus,
+            s.version as planVersion,
+            s.plan_month,
+            l.line_id,
+            l.product_name,
+            l.total_quantity,
+            l.forecast_quantity,
+            l.opening_inventory,
+            l.status as lineStatus,
+            l.version as lineVersion,
+            d.delivery_id,
+            d.node_name,
+            d.plan_quantity,
+            d.delivery_date,
+            d.version as deliveryVersion,
+            d.status as deliveryStatus
+        FROM sales_plan s
+                 LEFT JOIN sales_plan_line l ON l.plan_id = s.plan_id AND l.deleted = 0
+                 LEFT JOIN sales_plan_delivery d ON d.line_id = l.line_id
+        WHERE s.plan_month = #{planMonth}
+          AND s.deleted = 0
+        ORDER BY s.plan_id, l.line_id, d.delivery_date
+    </select>
+
+</mapper>

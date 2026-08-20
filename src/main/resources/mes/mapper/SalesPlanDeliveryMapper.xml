@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mes.mapper.SalesPlanDeliveryMapper">
+
+    <resultMap id="BaseResultMap" type="mes.entity.SalesPlanDelivery">
+        <id column="delivery_id" property="deliveryId"/>
+        <result column="line_id" property="lineId"/>
+        <result column="node_name" property="nodeName"/>
+        <result column="delivery_date" property="deliveryDate"/>
+        <result column="plan_quantity" property="planQuantity"/>
+        <result column="actual_quantity" property="actualQuantity"/>
+        <result column="status" property="status"/>
+        <result column="create_by" property="createBy"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+    <update id="deleteByPlanLineDeliveryId">
+        update sales_plan_delivery
+        set version = #{version} + 1
+            deleted = 1
+        where line_id = #{planLineId}
+        and version = #{version}
+        and status = 0
+    </update>
+    <update id="deleteByPlanLineDeliveryList">
+        update sales_plan_delivery
+        set deleted = 1,
+        version = version + 1
+        where line_id in 
+        <foreach collection="planLineIds" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+        and status = 0
+    </update>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        insert into sales_plan_delivery
+        (delivery_id,line_id, node_name, delivery_date, plan_quantity, actual_quantity)
+        values
+            <foreach collection="list" item="item" separator=",">
+                (#{item.deliveryId},#{item.lineId},#{item.nodeName},#{item.deliveryDate},#{item.planQuantity},#{item.actualQuantity})
+            </foreach>
+    </insert>
+    <insert id="insert" parameterType="mes.dto.sales.SalesPlanDeliveryUpdateDTO">
+        insert into sales_plan_delivery
+        (delivery_id,line_id, node_name, delivery_date, plan_quantity, actual_quantity)
+        values
+        (#{deliveryId},#{lineId},#{nodeName},#{deliveryDate},#{planQuantity},#{actualQuantity})
+    </insert>
+
+    <update id="batchUpdate">
+            update sales_plan_delivery
+            <set>
+                version = #{version} + 1,
+                <if test="lineId != null">
+                    line_id = #{item.lineId},
+                </if>
+                <if test="nodeName != null">
+                    node_name = #{item.nodeName},
+                </if>
+                <if test="deliveryDate != null">
+                    delivery_date = #{item.deliveryDate},
+                </if>
+                <if test="planQuantity != null">
+                    plan_quantity = #{item.planQuantity},
+                </if>
+                <if test="actualQuantity != null">
+                    actual_quantity = #{item.actualQuantity},
+                </if>
+            </set>
+            where delivery_id = #{item.deliveryId}
+            and version = #{item.version}
+            and status = 0
+            and deleted = 0
+    </update>
+
+
+</mapper>
