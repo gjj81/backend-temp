@@ -1,24 +1,6 @@
-﻿
-# IDE
-.idea/
-*.iml
-.vscode/
-
-# Java/Maven
-backend/target/
-backend/.classpath
-backend/.project
-backend/.settings/
-
-# Node.js/Vue (前端)
-frontend/RuoYi-Vue3/node_modules/
-frontend/RuoYi-Vue3/dist/
-frontend/RuoYi-Vue3/.env.local
-
-# OS
+﻿# ============== 全局忽略 ==============
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
-npm-debug.log*
+desktop.ini
+*.bak
+*.tmp
