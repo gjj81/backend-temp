@@ -23,6 +23,9 @@ public interface SalesPlanDeliveryMapper {
 
     int batchInsert(@Param("list") List<SalesPlanDeliveryUpdateDTO> salesPlanDeliveryList);
 
-    int batchUpdate(SalesPlanDeliveryUpdateDTO salesPlanDeliveryUpdateDTO);
+    int batchUpdate(@Param("list") List<SalesPlanDeliveryUpdateDTO> salesPlanDeliveryList);
+
     int insert(SalesPlanDeliveryUpdateDTO salesPlanDeliveryUpdateDTO);
+
+    int update(SalesPlanDeliveryUpdateDTO salesPlanDeliveryUpdateDTO);
 }

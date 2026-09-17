@@ -16,12 +16,13 @@
     </resultMap>
     <update id="deleteByPlanLineDeliveryId">
         update sales_plan_delivery
-        set version = #{version} + 1
+        set version = #{version} + 1,
             deleted = 1
-        where line_id = #{planLineId}
+        where delivery_id = #{planLineDeliveryId}
         and version = #{version}
         and status = 0
     </update>
+
     <update id="deleteByPlanLineDeliveryList">
         update sales_plan_delivery
         set deleted = 1,
@@ -48,30 +49,60 @@
         (#{deliveryId},#{lineId},#{nodeName},#{deliveryDate},#{planQuantity},#{actualQuantity})
     </insert>
 
-    <update id="batchUpdate">
+    <update id="batchUpdate" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
             update sales_plan_delivery
             <set>
-                version = #{version} + 1,
-                <if test="lineId != null">
+                version = #{item.version} + 1,
+                <if test="item.lineId != null and item.lineId != ''">
                     line_id = #{item.lineId},
                 </if>
-                <if test="nodeName != null">
+                <if test="item.nodeName != null and item.nodeName != ''">
                     node_name = #{item.nodeName},
                 </if>
-                <if test="deliveryDate != null">
+                <if test="item.deliveryDate != null">
                     delivery_date = #{item.deliveryDate},
                 </if>
-                <if test="planQuantity != null">
+                <if test="item.planQuantity != null">
                     plan_quantity = #{item.planQuantity},
                 </if>
-                <if test="actualQuantity != null">
+                <if test="item.actualQuantity != null">
                     actual_quantity = #{item.actualQuantity},
                 </if>
+                update_time = NOW(),
             </set>
             where delivery_id = #{item.deliveryId}
             and version = #{item.version}
             and status = 0
             and deleted = 0
+        </foreach>
+    </update>
+
+
+    <update id="update">
+        update sales_plan_delivery
+        <set>
+            version = #{version} + 1,
+            <if test="lineId != null">
+                line_id = #{lineId},
+            </if>
+            <if test="nodeName != null">
+                node_name = #{nodeName},
+            </if>
+            <if test="deliveryDate != null">
+                delivery_date = #{deliveryDate},
+            </if>
+            <if test="planQuantity != null">
+                plan_quantity = #{planQuantity},
+            </if>
+            <if test="actualQuantity != null">
+                actual_quantity = #{actualQuantity},
+            </if>
+        </set>
+        where delivery_id = #{deliveryId}
+        and version = #{version}
+        and status = 0
+        and deleted = 0
     </update>
 
 

@@ -144,26 +144,23 @@ function handleSave() {
   })
 
   if (isEdit.value) {
-    // 编辑模式
-    emit('save', {
-      type: 'delivery:update',
-      data: dto,
-      optimistic: false,
-      originalData: props.deliveryData
-    })
-    visible.value = false
-  } else {
-    // 新增模式
-    emit('save', {
-      type: 'delivery:add',  // ← 新增类型
-      data: dto,
-      optimistic: false,
-      targetInfo: {
-        targetArray: props.lineData.deliveryList  // 新增后要 push 到这个数组
-      }
-    })
-    visible.value = false
-  }
+      // 编辑模式：只发核心数据
+      emit('save', {
+        data: dto,
+        originalData: props.deliveryData,
+        lineData: props.lineData,
+        isEdit: true
+      })
+      visible.value = false
+    } else {
+      // 新增模式：只发核心数据
+      emit('save', {
+        data: dto,
+        lineData: props.lineData,
+        isEdit: false
+      })
+      visible.value = false
+    }
 
 }
 
@@ -182,21 +179,17 @@ async function handleDelete() {
     )
     // 不需要 DTO，直接传参数
     emit('delete', {
-      type: 'delivery:delete',
-      data: {
-        deliveryId: form.deliveryId,
-        version: form.version || 0                 // ✅ 用 version
-      },
-      optimistic: false,
-      targetInfo: {
-        targetArray: props.lineData.deliveryList,
-        targetId: props.deliveryData.deliveryId
+          data: {
+            deliveryId: form.deliveryId,
+            version: form.version || 0
+          },
+          lineData: props.lineData,
+          planData: props.planData
+        })
+        visible.value = false
+      } catch {
+        ElMessage.info('已取消删除')
       }
-    })
-    visible.value = false
-  } catch {
-    ElMessage.info('已取消删除')
-  }
 }
 
 function handleClose() {

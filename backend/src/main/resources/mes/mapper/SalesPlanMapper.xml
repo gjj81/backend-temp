@@ -129,7 +129,7 @@
             d.status as deliveryStatus
         FROM sales_plan s
                  LEFT JOIN sales_plan_line l ON l.plan_id = s.plan_id AND l.deleted = 0
-                 LEFT JOIN sales_plan_delivery d ON d.line_id = l.line_id
+                 LEFT JOIN sales_plan_delivery d ON d.line_id = l.line_id AND d.deleted = 0
         WHERE s.plan_month = #{planMonth}
           AND s.deleted = 0
         ORDER BY s.plan_id, l.line_id, d.delivery_date

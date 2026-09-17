@@ -173,6 +173,7 @@
 import { ref, reactive, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { SalesPlanVO, SalesPlanLineVO, SalesPlanDeliveryVO } from '@/types/sales-plan'
+import { SalesPlanUpdateDTO, SalesPlanLineUpdateDTO,SalesPlanDeliveryUpdateDTO  } from '@/types/sales-plan'
 
 const emit = defineEmits(['add-plan', 'save-plan', 'cancel'])
 
@@ -204,6 +205,41 @@ const formRules = {
   yearMonth: [{ required: true, message: '请选择计划月份', trigger: 'change' }]
 }
 
+const submitData = new SalesPlanUpdateDTO({
+  planId: null,  // 新增时没有 planId
+  version: 0,
+  planNo: formData.planNo,
+  customer: formData.customer,
+  planMonth: formData.yearMonth,
+  planType: formData.planType,
+  status: 0,
+  remark: '',
+  lines: formData.lineList.map(line => new SalesPlanLineUpdateDTO({
+    lineId: null,
+    planId: null,
+    productId: line.productId,
+    productName: line.productName,
+    totalQuantity: line.totalQuantity,
+    forecastQuantity: line.forecastQuantity,
+    openingInventory: line.openingInventory,
+    scheduledQuantity: line.scheduledQuantity,
+    finishedQuantity: line.finishedQuantity,
+    deliveredQuantity: line.deliveredQuantity,
+    status: 0,
+    version: 0,
+    deliveries: line.deliveryList.map(d => ({
+      deliveryId: null,
+      lineId: null,
+      nodeName: d.nodeName,
+      deliveryDate: d.deliveryDate,
+      planQuantity: d.planQuantity,
+      actualQuantity: d.actualQuantity,
+      status: 0,
+      version: 0
+    }))
+  }))
+})
+
 // ========== 行操作 ==========
 function addLine() {
   formData.lineList.push(new SalesPlanLineVO({
@@ -227,7 +263,7 @@ function addDelivery(lineIndex) {
   )
 }
 
-function removeDelivery(lineIndex, deliveryIndex) {
+function removeDelivery(lineIndex, deliveryIndex) { 
   formData.lineList[lineIndex].deliveryList.splice(deliveryIndex, 1)
 }
 
@@ -260,21 +296,40 @@ async function handleAddPlan() {
   try {
     await formRef.value?.validate()
 
-    const submitData = {
+    const submitData = new SalesPlanUpdateDTO({
+      planId: null,
+      version: 0,
+      planNo: formData.planNo,
       customer: formData.customer,
       planMonth: formData.yearMonth,
-      planNo: formData.planNo,
-      lines: formData.lineList.map(line => ({
+      planType: '',
+      status: 0,
+      remark: '',
+      lines: formData.lineList.map(line => new SalesPlanLineUpdateDTO({
+        lineId: null,
+        planId: null,
+        productId: null,
         productName: line.productName,
         totalQuantity: line.totalQuantity,
         forecastQuantity: line.forecastQuantity || line.totalQuantity,
         openingInventory: line.openingInventory || 0,
-        deliveries: line.deliveryList.map(d => ({
+        scheduledQuantity: 0,
+        finishedQuantity: 0,
+        deliveredQuantity: 0,
+        status: 0,
+        version: 0,
+        deliveries: line.deliveryList.map(d => new SalesPlanDeliveryUpdateDTO({
+          deliveryId: null,
+          lineId: null,
+          nodeName: '',
           deliveryDate: d.deliveryDate,
-          planQuantity: d.planQuantity
+          planQuantity: d.planQuantity,
+          actualQuantity: 0,
+          status: 0,
+          version: 0
         }))
       }))
-    }
+    })
 
     console.log('新增计划:', submitData)
     emit('add-plan', submitData)
@@ -297,12 +352,17 @@ async function handleSavePlan() {
       return
     }
 
-    const submitData = {
+    const submitData = new SalesPlanUpdateDTO({
       planId: editingId.value,
+      version: editingData.version || 0,
+      planNo: formData.planNo,
       customer: formData.customer,
       planMonth: formData.yearMonth,
-      planNo: formData.planNo
-    }
+      planType: formData.planType || '',
+      status: editingData.planStatus ?? 0,
+      remark: formData.remark || '',
+      lines: null
+    })
 
     console.log('保存计划信息:', submitData)
     emit('save-plan', submitData)
