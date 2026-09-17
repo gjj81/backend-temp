@@ -191,6 +191,14 @@ async function handleSave(payload) {// 统一处理修改
           targetInfo.targetArray.push(newDelivery)
         }
         break
+      case 'plan:add':
+        console.log('处理新增计划:', data)
+        result = await addPlan(data)
+        break
+      case 'plan:edit':
+        console.log('处理编辑计划:', data)
+        result = await updatePlan(data)
+        break
       default:
         throw new Error(`未知的保存类型: ${type}`)
     }
@@ -228,6 +236,10 @@ async function handleDelete(payload) {
             targetInfo.targetArray.splice(index, 1)
           }
         }
+        break
+      case 'plan':
+        console.log('确认删除计划:', data.planId, '版本号:', data.version)
+        await deletePlan(data.planId, data.version)
         break
       default:
         throw new Error(`未知的删除类型: ${type}`)

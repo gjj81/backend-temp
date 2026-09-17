@@ -64,7 +64,7 @@
                 opening_inventory,
                 scheduled_quantity,
                 finished_quantity,
-                delivered_quantity,
+                delivered_quantity
             )values
         <foreach collection="list" item="item" separator=",">
             (#{item.lineId},#{item.planId},#{item.productId},#{item.productName},#{item.totalQuantity},#{item.forecastQuantity},#{item.openingInventory},#{item.scheduledQuantity},#{item.finishedQuantity},#{item.deliveredQuantity})

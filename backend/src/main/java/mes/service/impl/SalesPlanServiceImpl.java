@@ -118,7 +118,7 @@ public class SalesPlanServiceImpl implements SalesPlanService {
              */
             if (CollUtil.isNotEmpty(updateDels)) {
                 for (SalesPlanDeliveryUpdateDTO del : updateDels) {
-                    int i = salesPlanDeliveryMapper.batchUpdate(del);
+                    int i = salesPlanDeliveryMapper.update(del);
                     if (i == 0) {
                         String message = del.getNodeName() + "节点更新失败\n请检查节点是否存在，或者已经被修改，已被删除\n";
                         throw new RuntimeException(message);

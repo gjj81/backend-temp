@@ -8,6 +8,8 @@ import mes.service.SalesPlanDeliveryService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 public class SalesPlanDeliveryServiceImpl implements SalesPlanDeliveryService {
     private final SalesPlanDeliveryMapper salesPlanDeliveryMapper;
@@ -18,8 +20,8 @@ public class SalesPlanDeliveryServiceImpl implements SalesPlanDeliveryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)// 声明事务回滚，当抛出异常时回滚
-    public Result<String> delete(String planLineId, Integer version) {
-        val i = salesPlanDeliveryMapper.deleteByPlanLineDeliveryId(planLineId, version);
+    public Result<String> delete(String deliveryId, Integer version) {
+        val i = salesPlanDeliveryMapper.deleteByPlanLineDeliveryId(deliveryId, version);
         if (i == 0) {
             throw new RuntimeException("删除失败");
         }
@@ -29,7 +31,7 @@ public class SalesPlanDeliveryServiceImpl implements SalesPlanDeliveryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Result<String> update(SalesPlanDeliveryUpdateDTO dto) {
-        val i = salesPlanDeliveryMapper.batchUpdate(dto);
+        val i = salesPlanDeliveryMapper.update(dto);
         if (i == 0) {
             throw new RuntimeException("更新失败"+dto.getNodeName()+"已被他人修改，请刷新后重试");
         }
@@ -39,7 +41,12 @@ public class SalesPlanDeliveryServiceImpl implements SalesPlanDeliveryService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Result<String> insert(SalesPlanDeliveryUpdateDTO dto) {
-        salesPlanDeliveryMapper.insert(dto);
-        return Result.success("插入成功");
+        String nodeName = UUID.randomUUID().toString();
+        dto.setDeliveryId(nodeName);// 新增时自动生成ID
+        val i = salesPlanDeliveryMapper.insert(dto);
+        if (i == 0) {
+            throw new RuntimeException("插入失败");
+        }
+        return Result.success(nodeName);
     }
 }

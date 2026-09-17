@@ -131,12 +131,12 @@ function handleLoadPlan(plan) {
 function handleDeletePlan(plan) {
   emit('delete', { 
     type: 'plan', 
-    data: { planId: plan.planId, customer: plan.customer } 
+    data: { planId: plan.planId, version: plan.version } 
   })
 }
 
 /** 删除产品 —— 先同步左侧表单，再显式封装 { type, data } */
-function handleDeleteProduct({ plan, line, lineIdx }) {
+function handleDeleteProduct({ plan, line }) {
   if (planFormRef.value?.getEditingId() === plan.planId) {
     planFormRef.value?.removeLineById(line.lineId)
   }
@@ -184,12 +184,28 @@ function handleAddDelivery({ line, plan }) {
 
 /** 交货节点保存 —— 显式封装 { type, data }（第三层只发纯数据） */
 function handleDeliverySaved(eventData) {
-  emit('save', eventData )
+  emit('save', {
+    type: eventData.isEdit ? 'delivery:update' : 'delivery:add',
+    data: eventData.data,
+    optimistic: false,
+    originalData: eventData.originalData,
+    targetInfo: !eventData.isEdit 
+      ? { targetArray: eventData.lineData.deliveryList }
+      : undefined
+  })
 }
 
 /** 交货节点删除 —— 显式封装 { type, data }（第三层只发纯数据） */
 function handleDeliveryDeleted(eventData) {
-  emit('delete', eventData)
+  emit('delete', {
+    type: 'delivery:delete',
+    data: eventData.data,
+    optimistic: false,
+    targetInfo: {
+      targetArray: eventData.lineData.deliveryList,
+      targetId: eventData.data.deliveryId
+    }
+  })
 }
 
 /** 产品保存（新增/编辑）—— 更新本地数据 + 同步左侧 + 显式封装 { type, data } */

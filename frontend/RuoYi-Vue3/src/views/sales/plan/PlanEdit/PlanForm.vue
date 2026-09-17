@@ -173,6 +173,7 @@
 import { ref, reactive, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { SalesPlanVO, SalesPlanLineVO, SalesPlanDeliveryVO } from '@/types/sales-plan'
+import { SalesPlanUpdateDTO, SalesPlanLineUpdateDTO,SalesPlanDeliveryUpdateDTO  } from '@/types/sales-plan'
 
 const emit = defineEmits(['add-plan', 'save-plan', 'cancel'])
 
@@ -227,7 +228,7 @@ function addDelivery(lineIndex) {
   )
 }
 
-function removeDelivery(lineIndex, deliveryIndex) {
+function removeDelivery(lineIndex, deliveryIndex) { 
   formData.lineList[lineIndex].deliveryList.splice(deliveryIndex, 1)
 }
 
@@ -260,21 +261,40 @@ async function handleAddPlan() {
   try {
     await formRef.value?.validate()
 
-    const submitData = {
+    const submitData = new SalesPlanUpdateDTO({
+      planId: null,
+      version: 0,
+      planNo: formData.planNo,
       customer: formData.customer,
       planMonth: formData.yearMonth,
-      planNo: formData.planNo,
-      lines: formData.lineList.map(line => ({
+      planType: '',
+      status: 0,
+      remark: '',
+      lines: formData.lineList.map(line => new SalesPlanLineUpdateDTO({
+        lineId: null,
+        planId: null,
+        productId: null,
         productName: line.productName,
         totalQuantity: line.totalQuantity,
         forecastQuantity: line.forecastQuantity || line.totalQuantity,
         openingInventory: line.openingInventory || 0,
-        deliveries: line.deliveryList.map(d => ({
+        scheduledQuantity: 0,
+        finishedQuantity: 0,
+        deliveredQuantity: 0,
+        status: 0,
+        version: 0,
+        deliveries: line.deliveryList.map(d => new SalesPlanDeliveryUpdateDTO({
+          deliveryId: null,
+          lineId: null,
+          nodeName: '',
           deliveryDate: d.deliveryDate,
-          planQuantity: d.planQuantity
+          planQuantity: d.planQuantity,
+          actualQuantity: 0,
+          status: 0,
+          version: 0
         }))
       }))
-    }
+    })
 
     console.log('新增计划:', submitData)
     emit('add-plan', submitData)
@@ -296,14 +316,40 @@ async function handleSavePlan() {
       ElMessage.warning('未选择要编辑的计划')
       return
     }
-
-    const submitData = {
-      planId: editingId.value,
+    const submitData = new SalesPlanUpdateDTO({
+      planId: editingId.value,  // 编辑时 planId 有值
+      version: editingData.version || 0,  // 编辑时 version 来自加载的数据
+      planNo: formData.planNo,
       customer: formData.customer,
       planMonth: formData.yearMonth,
-      planNo: formData.planNo
-    }
-
+      planType: formData.planType || '',
+      status: editingData.planStatus ?? 0,
+      remark: formData.remark || '',
+      lines: formData.lineList.map(line => new SalesPlanLineUpdateDTO({
+        lineId: line.lineId || null,  // 编辑时 lineId 有值（已有产品），新增产品为 null
+        planId: editingId.value,
+        productId: line.productId || null,
+        productName: line.productName,
+        totalQuantity: line.totalQuantity,
+        forecastQuantity: line.forecastQuantity || line.totalQuantity,
+        openingInventory: line.openingInventory || 0,
+        scheduledQuantity: line.scheduledQuantity || 0,
+        finishedQuantity: line.finishedQuantity || 0,
+        deliveredQuantity: line.deliveredQuantity || 0,
+        status: line.status || 0,
+        version: line.version || 0,  // 编辑时 version 来自加载的数据
+        deliveries: line.deliveryList.map(d => new SalesPlanDeliveryUpdateDTO({
+          deliveryId: d.deliveryId || null,  // 编辑时 deliveryId 有值（已有节点），新增节点为 null
+          lineId: line.lineId || null,
+          nodeName: d.nodeName || '',
+          deliveryDate: d.deliveryDate,
+          planQuantity: d.planQuantity,
+          actualQuantity: d.actualQuantity || 0,
+          status: d.status || 0,
+          version: d.version || 0  // 编辑时 version 来自加载的数据
+        }))
+      }))
+    })
     console.log('保存计划信息:', submitData)
     emit('save-plan', submitData)
     ElMessage.success('计划信息保存成功')
@@ -336,6 +382,7 @@ function loadPlan(plan) {
     customer: plan.customer,
     yearMonth: plan.yearMonth,
     planStatus: plan.status,
+    version: plan.version,
     originalLines: JSON.parse(JSON.stringify(plan.lineList))
   })
 
@@ -353,11 +400,15 @@ function loadPlan(plan) {
         forecastQuantity: line.forecastQuantity ?? 0,
         openingInventory: line.openingInventory ?? 0,
         status: line.status ?? 0,
+        version: line.version ?? 0, 
         deliveryList: (line.deliveryList || []).map(d => new SalesPlanDeliveryVO({
           deliveryId: d.deliveryId,
           deliveryDate: d.deliveryDate || '',
           planQuantity: d.planQuantity ?? null,
-          status: d.status ?? 0
+          status: d.status ?? 0,
+          version: d.version ?? 0,   // ← 新增
+          nodeName: d.nodeName || '', // ← 新增
+          actualQuantity: d.actualQuantity ?? 0  // ← 新增
         }))
       }))
     })
@@ -377,20 +428,24 @@ function removeLineById(lineId) {
 
 /** 同步更新 lineList（右侧新增/编辑产品时同步） */
 function syncLineList(lineList) {
-  formData.lineList = lineList.map(line => new SalesPlanLineVO({
-    lineId: line.lineId,
-    productName: line.productName || '',
-    totalQuantity: line.totalQuantity ?? null,
-    forecastQuantity: line.forecastQuantity ?? 0,
-    openingInventory: line.openingInventory ?? 0,
-    status: line.status ?? 0,
-    deliveryList: (line.deliveryList || []).map(d => new SalesPlanDeliveryVO({
-      deliveryId: d.deliveryId,
-      deliveryDate: d.deliveryDate || '',
-      planQuantity: d.planQuantity ?? null,
-      status: d.status ?? 0
-    }))
+formData.lineList = lineList.map(line => new SalesPlanLineVO({
+  lineId: line.lineId,
+  productName: line.productName || '',
+  totalQuantity: line.totalQuantity ?? null,
+  forecastQuantity: line.forecastQuantity ?? 0,
+  openingInventory: line.openingInventory ?? 0,
+  status: line.status ?? 0,
+  version: line.version ?? 0,  
+  deliveryList: (line.deliveryList || []).map(d => new SalesPlanDeliveryVO({
+    deliveryId: d.deliveryId,
+    deliveryDate: d.deliveryDate || '',
+    planQuantity: d.planQuantity ?? null,
+    status: d.status ?? 0,
+    version: d.version ?? 0,   
+    nodeName: d.nodeName || '', 
+    actualQuantity: d.actualQuantity ?? 0  
   }))
+}))
 }
 
 /** 获取当前编辑的计划ID */

@@ -62,7 +62,7 @@ public class SalesPlanLineServiceImpl implements SalesPlanLineService {
              * TODO 批量更新子表（sales_plan_delivery）现在数据量少，并且需要考虑乐观锁更新，后续使用BATCH或者先查后改 方法批量更新,和返回更新失败的节点名称
              */
             for (SalesPlanDeliveryUpdateDTO delivery : updateLines) {
-                int i = salesPlanDeliveryMapper.batchUpdate(delivery);
+                int i = salesPlanDeliveryMapper.update(delivery);
                 if (i == 0) {
                     throw new RuntimeException("交货节点" + delivery.getNodeName() + "已被他人修改，请刷新后重试");
                 }
