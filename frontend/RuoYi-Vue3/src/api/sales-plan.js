@@ -82,3 +82,11 @@ export function updatePlanDelivery(data) {
     data
   })
 }
+
+export function updatePlanDeliveryList(data) {
+  return request({
+    url: '/api/sales-plan/update/list/delivery',
+    method: 'post',
+    data
+  })
+}

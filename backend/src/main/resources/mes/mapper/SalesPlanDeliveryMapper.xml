@@ -104,6 +104,60 @@
         and status = 0
         and deleted = 0
     </update>
+    <update id="updateBatch" parameterType="java.util.List">
+        update sales_plan_delivery
+        <set>
+            version = version + 1,
+            line_id = CASE delivery_id
+            <foreach collection="list" item="item">
+                WHEN #{item.deliveryId} THEN
+                CASE WHEN #{item.lineId} IS NOT NULL THEN #{item.lineId} ELSE line_id END
+            </foreach>
+            ELSE line_id
+            END,
+            node_name = CASE delivery_id
+            <foreach collection="list" item="item">
+                WHEN #{item.deliveryId} THEN
+                CASE WHEN #{item.nodeName} IS NOT NULL THEN #{item.nodeName} ELSE node_name END
+            </foreach>
+            ELSE node_name
+            END,
+            delivery_date = CASE delivery_id
+            <foreach collection="list" item="item">
+                WHEN #{item.deliveryId} THEN
+                CASE WHEN #{item.deliveryDate} IS NOT NULL THEN #{item.deliveryDate} ELSE delivery_date END
+            </foreach>
+            ELSE delivery_date
+            END,
+            plan_quantity = CASE delivery_id
+            <foreach collection="list" item="item">
+                WHEN #{item.deliveryId} THEN
+                CASE WHEN #{item.planQuantity} IS NOT NULL THEN #{item.planQuantity} ELSE plan_quantity END
+            </foreach>
+            ELSE plan_quantity
+            END,
+            actual_quantity = CASE delivery_id
+            <foreach collection="list" item="item">
+                WHEN #{item.deliveryId} THEN
+                CASE WHEN #{item.actualQuantity} IS NOT NULL THEN #{item.actualQuantity} ELSE actual_quantity END
+            </foreach>
+            ELSE actual_quantity
+            END,
+            update_time = NOW()
+        </set>
+        where delivery_id in (
+        <foreach collection="list" item="item" separator=",">
+            #{item.deliveryId}
+        </foreach>
+        )
+        and status = 0
+        and deleted = 0
+        and (
+        <foreach collection="list" item="item" separator=" or ">
+            (delivery_id = #{item.deliveryId} and version = #{item.version})
+        </foreach>
+        )
+    </update>
 
 
 </mapper>

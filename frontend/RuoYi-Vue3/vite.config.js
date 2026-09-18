@@ -22,6 +22,14 @@ export default defineConfig(({ mode, command }) => {
         // 设置别名
         '@': path.resolve(__dirname, './src')
       },
+      optimizeDeps: {
+      include: [
+        '@fullcalendar/vue3',
+        '@fullcalendar/core',
+        '@fullcalendar/daygrid',
+        '@fullcalendar/interaction'
+      ]
+    },
       // https://cn.vitejs.dev/config/#resolve-extensions
       extensions: ['.mjs', '.js', '.ts', '.jsx', '.tsx', '.json', '.vue']
     },

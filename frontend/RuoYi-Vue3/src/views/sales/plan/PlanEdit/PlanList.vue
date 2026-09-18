@@ -159,7 +159,6 @@
 <script setup>
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatNum, formatDateTag } from './utils.js'
-import { SalesPlanVO, SalesPlanLineVO, SalesPlanDeliveryVO } from '@/types/sales-plan'
 
 const props = defineProps({
   planList: { type: Array, default: () => [] }

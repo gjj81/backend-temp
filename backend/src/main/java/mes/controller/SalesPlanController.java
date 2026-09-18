@@ -144,4 +144,12 @@ public class SalesPlanController {
             @RequestBody SalesPlanDeliveryUpdateDTO dto) {
         return salesPlanDeliveryService.update(dto);
     }
+
+    @PostMapping("/update/list/delivery")
+    public Result<String> updatePlanDeliveryList(
+            @Validated(ValidationGroups.DeliveryUpdate.class)
+            @RequestBody List<SalesPlanDeliveryUpdateDTO> dtoList) {
+        return salesPlanDeliveryService.updateBatch(dtoList);
+    }
+
 }

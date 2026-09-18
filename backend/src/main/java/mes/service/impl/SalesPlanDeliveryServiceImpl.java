@@ -8,6 +8,7 @@ import mes.service.SalesPlanDeliveryService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -48,5 +49,14 @@ public class SalesPlanDeliveryServiceImpl implements SalesPlanDeliveryService {
             throw new RuntimeException("插入失败");
         }
         return Result.success(nodeName);
+    }
+
+    @Override
+    public Result<String> updateBatch(List<SalesPlanDeliveryUpdateDTO> dtoList) {
+        val i = salesPlanDeliveryMapper.updateBatch(dtoList);
+        if (i == 0) {
+                throw new RuntimeException("更新失败");
+            };
+        return Result.success("更新成功");
     }
 }

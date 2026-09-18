@@ -101,6 +101,7 @@ import {
   updatePlanLine,
   addPlanDelivery,
   updatePlanDelivery,
+  updatePlanDeliveryList,
   deletePlan,
   deletePlanLine,
   deletePlanDelivery
@@ -199,6 +200,18 @@ async function handleSave(payload) {// 统一处理修改
         console.log('处理编辑计划:', data)
         result = await updatePlan(data)
         break
+      case 'line:add':
+        console.log('处理新增产品行:', data)
+        result = await addPlanLine(data)
+        break
+      case 'line:edit':
+        console.log('处理编辑产品行:', data)
+        result = await updatePlanLine(data)
+        break
+      case 'delivery:batch-move':
+        console.log('处理批量移动交货节点:', data)
+        result = await updatePlanDeliveryList(data)
+        break
       default:
         throw new Error(`未知的保存类型: ${type}`)
     }
@@ -240,6 +253,9 @@ async function handleDelete(payload) {
       case 'plan':
         console.log('确认删除计划:', data.planId, '版本号:', data.version)
         await deletePlan(data.planId, data.version)
+        break
+      case 'line':
+        await deletePlanLine(data.lineId, data.version)
         break
       default:
         throw new Error(`未知的删除类型: ${type}`)

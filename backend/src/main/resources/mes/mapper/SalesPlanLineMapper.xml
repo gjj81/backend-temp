@@ -81,7 +81,7 @@
                 opening_inventory,
                 scheduled_quantity,
                 finished_quantity,
-                delivered_quantity,
+                delivered_quantity
             )values
         (#{lineId},#{planId},#{productId},#{productName},#{totalQuantity},#{forecastQuantity},#{openingInventory},#{scheduledQuantity},#{finishedQuantity},#{deliveredQuantity})
     </insert>

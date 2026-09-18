@@ -75,14 +75,14 @@
       <el-divider content-position="left">交货计划</el-divider>
 
       <div 
-        v-for="(delivery, dIdx) in form.deliveryList" 
+        v-for="(delivery, dIdx) in form.deliveries"
         :key="dIdx" 
         class="dialog-delivery-item"
       >
         <div class="dialog-delivery-header">
           <span>交货 #{{ dIdx + 1 }}</span>
           <el-button 
-          v-if="form.deliveryList.length > 1"
+          v-if="form.deliveries.length > 1"
           type="danger" 
           link 
           size="small"
@@ -145,7 +145,7 @@
     <template #footer>
       <div class="dialog-footer" style="display: flex; justify-content: space-between; align-items: center;">
         <div v-if="!isEdit" style="font-size: 12px; color: #6b7280;">
-          新增 {{ form.deliveryList.length }} 个交货节点
+          新增 {{ form.deliveries.length }} 个交货节点
         </div>
         <div v-else></div>
 
@@ -168,7 +168,7 @@
 import { ref, reactive, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getDeliveryStatusType } from './utils.js'
-import { SalesPlanLineVO, SalesPlanDeliveryVO } from '@/types/sales-plan'
+import { SalesPlanLineUpdateDTO, SalesPlanDeliveryUpdateDTO } from '@/types/sales-plan'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
@@ -188,14 +188,15 @@ const isEdit = computed(() => !!props.productData?.lineId)
 
 const formRef = ref(null)
 
-const form = reactive(new SalesPlanLineVO({
+const form = reactive(new SalesPlanLineUpdateDTO({
   lineId: null,
+  planId: null,
   productName: '',
   totalQuantity: null,
   forecastQuantity: 0,
   openingInventory: 0,
-  deliveryList: [
-    new SalesPlanDeliveryVO({ deliveryId: null, deliveryDate: '', planQuantity: null, status: 0 })
+  deliveries: [
+    new SalesPlanDeliveryUpdateDTO({ deliveryId: null, deliveryDate: '', planQuantity: null, status: 0 })
   ]
 }))
 
@@ -206,20 +207,27 @@ const formRules = {
 
 watch(() => props.modelValue, (val) => {
   if (val) {
-    if (isEdit.value && props.productData) {
+    if (isEdit.value && props.productData?.lineId) {
+      const sourceDeliveries = props.productData.deliveries || props.productData.deliveryList || []
       Object.assign(form, {
         lineId: props.productData.lineId,
+        planId: props.productData.planId,        // ← 添加 planId
         productName: props.productData.productName || '',
         totalQuantity: props.productData.totalQuantity ?? null,
         forecastQuantity: props.productData.forecastQuantity ?? 0,
         openingInventory: props.productData.openingInventory ?? 0,
         status: props.productData.status ?? 0,
-        deliveryList: (props.productData.deliveryList || []).map(d => ({
-          deliveryId: d.deliveryId,
-          deliveryDate: d.deliveryDate || '',
-          planQuantity: d.planQuantity ?? null,
-          status: d.status ?? 0
-        }))
+        version: props.productData.version ?? 0,  // ← 添加 version
+        deliveries: Array.isArray(sourceDeliveries) 
+          ? sourceDeliveries.map(d => ({
+              deliveryId: d.deliveryId,
+              deliveryDate: d.deliveryDate || '',
+              planQuantity: d.planQuantity ?? null,
+              status: d.status ?? 0,
+              version: d.version ?? 0,        
+              nodeName: d.nodeName || ''     
+            }))
+          : []
       })
     } else {
       resetForm()
@@ -228,20 +236,21 @@ watch(() => props.modelValue, (val) => {
 })
 
 function addDelivery() {
-  form.deliveryList.push(new SalesPlanDeliveryVO({
+  form.deliveries.push(new SalesPlanDeliveryUpdateDTO({
     deliveryId: null,
     deliveryDate: '',
     planQuantity: null,
+    nodeName: '',  // ← 添加这个字段
     status: 0
   }))
 }
 
 function removeDelivery(dIdx) {
-  if (form.deliveryList.length <= 1) {
+  if (form.deliveries.length <= 1) {
     ElMessage.warning('至少需要一个交货节点')
     return
   }
-  form.deliveryList.splice(dIdx, 1)
+  form.deliveries.splice(dIdx, 1)
 }
 
 async function handleSave() {
@@ -253,13 +262,42 @@ async function handleSave() {
       return
     }
 
-    const result = {
-      ...form,
-      isEdit: isEdit.value,
-      originalLineIndex: props.lineIndex
+    // 过滤掉空的交货节点（deliveryDate 和 planQuantity 都为空的）
+    const validDeliveries = (form.deliveries || []).filter(d => 
+      d.deliveryDate && d.planQuantity
+    )
+
+    if (validDeliveries.length === 0) {
+      ElMessage.warning('请至少添加一个完整的交货节点')
+      return
     }
 
-    emit('save', result)
+    // 新增模式需要添加 planId
+    const dto = {
+      lineId: form.lineId,
+      planId: isEdit.value ? form.planId : props.planData.planId,
+      productName: form.productName,
+      totalQuantity: form.totalQuantity,
+      forecastQuantity: form.forecastQuantity,
+      openingInventory: form.openingInventory,
+      status: form.status,
+      version: form.version,
+      deliveries: validDeliveries.map(d => ({
+        deliveryId: d.deliveryId,
+        nodeName: d.nodeName || d.deliveryDate,  // 默认使用日期作为节点名
+        deliveryDate: d.deliveryDate,
+        planQuantity: d.planQuantity,
+        status: d.status,
+        version: d.version  // ← 关键：必须包含 version
+      }))
+    }
+
+    emit('save', {
+      data: dto,
+      isEdit: isEdit.value,
+      originalLineIndex: props.lineIndex,
+      planData: props.planData
+    })
     visible.value = false
   } catch (error) {
     if (error !== false) {
@@ -268,7 +306,6 @@ async function handleSave() {
     }
   }
 }
-
 function handleClose() {
   resetForm()
   emit('close')
@@ -279,14 +316,15 @@ function handleCancel() {
 }
 
 function resetForm() {
-  Object.assign(form, new SalesPlanLineVO({
+  Object.assign(form, new SalesPlanLineUpdateDTO({
     lineId: null,
+    planId: null,
     productName: '',
     totalQuantity: null,
     forecastQuantity: 0,
     openingInventory: 0,
-    deliveryList: [
-      new SalesPlanDeliveryVO({ deliveryId: null, deliveryDate: '', planQuantity: null, status: 0 })
+    deliveries: [
+      new SalesPlanDeliveryUpdateDTO({ deliveryId: null, deliveryDate: '', planQuantity: null, nodeName: '', status: 0 })
     ]
   }))
 }

@@ -28,4 +28,6 @@ public interface SalesPlanDeliveryMapper {
     int insert(SalesPlanDeliveryUpdateDTO salesPlanDeliveryUpdateDTO);
 
     int update(SalesPlanDeliveryUpdateDTO salesPlanDeliveryUpdateDTO);
+
+    int updateBatch(@Param("list") List<SalesPlanDeliveryUpdateDTO> dtoList);
 }

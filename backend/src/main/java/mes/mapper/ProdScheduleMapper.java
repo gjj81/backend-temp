@@ -10,16 +10,5 @@ import mes.entity.ProdSchedule;
 */
 public interface ProdScheduleMapper {
 
-    int deleteByPrimaryKey(Long id);
-
-    int insert(ProdSchedule record);
-
-    int insertSelective(ProdSchedule record);
-
-    ProdSchedule selectByPrimaryKey(Long id);
-
-    int updateByPrimaryKeySelective(ProdSchedule record);
-
-    int updateByPrimaryKey(ProdSchedule record);
 
 }

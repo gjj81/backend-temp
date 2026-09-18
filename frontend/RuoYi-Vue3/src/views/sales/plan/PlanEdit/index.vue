@@ -142,7 +142,7 @@ function handleDeleteProduct({ plan, line }) {
   }
   emit('delete', { 
     type: 'line', 
-    data: { lineId: line.lineId, planId: plan.planId } 
+    data: { lineId: line.lineId, version: line.version || 0 } 
   })
 }
 
@@ -150,7 +150,8 @@ function handleDeleteProduct({ plan, line }) {
 function handleOpenEditProduct({ plan, line, lineIdx }) {
   currentPlanForProduct.value = plan
   currentLineIdxForEdit.value = lineIdx
-  currentProductForDialog.value = line
+  // 将 plan.planId 合并到 line 对象中
+  currentProductForDialog.value = { ...line, planId: plan.planId }
   productDialogVisible.value = true
 }
 
@@ -209,42 +210,39 @@ function handleDeliveryDeleted(eventData) {
 }
 
 /** 产品保存（新增/编辑）—— 更新本地数据 + 同步左侧 + 显式封装 { type, data } */
-function handleProductSaved(result) {
-  const plan = currentPlanForProduct.value
+function handleProductSaved(eventData) {
+  const plan = eventData.planData || currentPlanForProduct.value
   if (!plan) return
 
-  if (result.isEdit) {
+  const result = eventData.data
+
+  if (eventData.isEdit) {
     // 编辑模式
-    if (result.originalLineIndex !== null) {
-      Object.assign(plan.lineList[result.originalLineIndex], {
+    if (eventData.originalLineIndex !== null) {
+      Object.assign(plan.lineList[eventData.originalLineIndex], {
         productName: result.productName,
         totalQuantity: result.totalQuantity,
         forecastQuantity: result.forecastQuantity,
         openingInventory: result.openingInventory,
-        deliveryList: [...result.deliveryList]
+        deliveryList: result.deliveries || []
       })
     }
     ElMessage.success('产品修改成功')
     emit('save', { type: 'line:edit', data: result })
   } else {
     // 新增模式
-    const newLine = new SalesPlanLineVO({
-      lineId: Date.now().toString(),
+    const newLine = {
+      lineId: null,
       productName: result.productName,
       totalQuantity: result.totalQuantity,
       forecastQuantity: result.forecastQuantity,
       openingInventory: result.openingInventory,
       status: 0,
-      deliveryList: result.deliveryList.map(d => new SalesPlanDeliveryVO({
-        deliveryId: Date.now().toString() + Math.random(),
-        deliveryDate: d.deliveryDate,
-        planQuantity: d.planQuantity,
-        status: 0
-      }))
-    })
+      deliveryList: result.deliveries || []
+    }
     plan.lineList.push(newLine)
     ElMessage.success('产品新增成功')
-    emit('save', { type: 'line:add', data: { newLine, planId: plan.planId } })
+    emit('save', { type: 'line:add', data: result })
   }
 
   if (planFormRef.value?.getEditingId() === plan.planId) {
