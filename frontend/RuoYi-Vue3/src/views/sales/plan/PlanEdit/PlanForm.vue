@@ -17,7 +17,7 @@
             :type="editingData.planStatus === 0 ? 'success' : 'danger'"
             size="small"
           >
-            {{ editingData.planStatus === 0 ? '可编辑' : '已锁定' }}
+            {{ editingData.planStatus === 0 ? '未下发' : editingData.planStatus === 1 ? '已下发' : '已归档' }}
           </el-tag>
           <span 
             v-if="formData.lineList.length > 0"
@@ -143,7 +143,7 @@
         <div v-if="editingId" style="width: 100%; margin-bottom: 12px;">
           <el-alert
             v-if="editingData.planStatus !== 0"
-            title="该计划已确认，无法修改基本信息"
+            title="该计划已下发，无法修改基本信息"
             type="warning"
             :closable="false"
             show-icon

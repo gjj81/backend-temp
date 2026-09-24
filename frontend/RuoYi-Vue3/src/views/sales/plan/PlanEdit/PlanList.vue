@@ -25,11 +25,11 @@
           </span>
 
           <el-tag 
-            :type="plan.status === 0 ? 'success' : 'danger'" 
+            :type="planTagType(plan.status)" 
             size="small"
             effect="dark"
           >
-            {{ plan.status === 0 ? '待确认' : '已确认' }}
+            {{ planStatusText(plan.status) }}
           </el-tag>
         </div>
 
@@ -40,7 +40,7 @@
               link 
               size="small"
               @click.stop="handleOpenAddProduct(plan)"
-              :disabled="plan.status !== 0"
+              :disabled="plan.status !== 0 && plan.status !== 1"
             >
               ➕
             </el-button>
@@ -128,11 +128,11 @@
 
             <span class="col-qty">
               <el-tag 
-                :type="line.status === 0 ? 'success' : 'danger'" 
+                :type="lineTagType(line.status)" 
                 size="small"
                 effect="plain"
               >
-                {{ line.status === 0 ? '待生产' : '生产中' }}
+                {{ lineStatusText(line.status) }}
               </el-tag>
             </span>
 
@@ -160,6 +160,23 @@
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { formatNum, formatDateTag } from './utils.js'
 
+function planStatusText(status) {
+  const map = { 0: '未下发', 1: '已下发', 2: '已归档' }
+  return map[status] || '未知'
+}
+function planTagType(status) {
+  const map = { 0: 'success', 1: 'warning', 2: 'info' }
+  return map[status] || 'info'
+}
+function lineStatusText(status) {
+  const map = { 0: '未下发', 1: '已下发', 2: '已排产', 3: '生产中', 4: '已完成' }
+  return map[status] || '未知'
+}
+function lineTagType(status) {
+  const map = { 0: 'success', 1: 'warning', 2: 'primary', 3: 'danger', 4: 'info' }
+  return map[status] || 'info'
+}
+
 const props = defineProps({
   planList: { type: Array, default: () => [] }
 })
@@ -177,10 +194,10 @@ const emit = defineEmits([
 // ========== 加载计划到左侧编辑 ==========
 function handleLoadPlan(plan) {
   if (plan.status !== 0) {
-    ElMessage.warning(`该计划已确认（状态=${plan.status}），无法编辑`)
+    ElMessage.warning(`该计划已下发（状态=${plan.status}），无法编辑`)
     return
   }
-  emit('load-plan', plan) // 发射事件到父组件
+  emit('load-plan', plan)
 }
 
 // ========== 删除计划 ==========
@@ -221,7 +238,6 @@ async function handleDeleteProduct(plan, line, lineIdx) {
       { confirmButtonText: '确认删除', cancelButtonText: '取消', type: 'warning' }
     )
 
-    // 直接从本地数组移除
     plan.lineList.splice(lineIdx, 1)
 
     ElMessage.success(`已删除产品 "${line.productName}"`)
@@ -251,8 +267,8 @@ function handleOpenEditProduct(plan, line, lineIdx) {
 
 // ========== 打开产品新增弹窗 ==========
 function handleOpenAddProduct(plan) {
-  if (plan.status !== 0) {
-    ElMessage.warning(`父级计划已锁定（状态=${plan.status}），无法新增产品`)
+  if (plan.status === 2) {
+    ElMessage.warning('该计划已归档，无法新增产品')
     return
   }
   emit('open-add-product', plan)
@@ -264,10 +280,7 @@ function handleDateClick(delivery, line, plan) {
 }
 
 // ========== 新增交货节点 ==========
-
-/** 打开新增交货节点弹窗 */
 function handleAddDelivery(line, plan) {
-  // 状态检查
   if (line.status !== 0) {
     ElMessage.warning('该产品已锁定，无法新增交货节点')
     return
@@ -277,7 +290,6 @@ function handleAddDelivery(line, plan) {
     return
   }
   
-  // 向上发射事件
   emit('add-delivery', { line, plan })
 }
 </script>

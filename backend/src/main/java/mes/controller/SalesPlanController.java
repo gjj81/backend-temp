@@ -1,10 +1,8 @@
 package mes.controller;
 
 import mes.common.result.Result;
-import mes.dto.sales.SalesPlanFormDeliveryDTO;
-import mes.dto.sales.SalesPlanFormLineDTO;
-import mes.dto.sales.SalesPlanFormDTO;
-import mes.dto.sales.ValidationGroups;
+import mes.dto.SalesPlanStatusDTO;
+import mes.dto.sales.*;
 import mes.service.SalesPlanDeliveryService;
 import mes.service.SalesPlanLineService;
 import mes.service.SalesPlanService;
@@ -152,11 +150,19 @@ public class SalesPlanController {
         return salesPlanDeliveryService.updateBatch(dtoList);
     }
 
-    @PostMapping("/update/list/status")
-    public Result<String> updateStatus(
-        @RequestBody SalesPlanFormDTO dto
+    @PostMapping("/update/plan/status")
+    public Result<String> updatePlanStatus(
+        @RequestBody SalesPlanStatusDTO dto
     ) {
         return null;
     }
+
+    @PostMapping("/update/line/status")
+    public Result<String> updatePlanLineStatus(
+        @RequestBody SalesPlanLineStatusDTO dtoList
+    ) {
+        return null;
+    }
+
 
 }

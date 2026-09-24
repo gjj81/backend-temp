@@ -7,8 +7,17 @@
     @close="handleClose"
   >
     <el-alert
-      v-if="planData && planData.status !== 0"
-      title="父级计划已锁定，无法操作"
+      v-if="isEdit && planData && planData.status !== 0"
+      title="父级计划已下发，无法修改已有产品"
+      type="warning"
+      :closable="false"
+      show-icon
+      style="margin-bottom: 16px;"
+    />
+
+    <el-alert
+      v-else-if="planData && planData.status === 2"
+      title="父级计划已归档，无法操作"
       type="error"
       :closable="false"
       show-icon
@@ -35,7 +44,7 @@
         <el-input 
           v-model="form.productName" 
           placeholder="请输入产品名称"
-          :disabled="planData?.status !== 0"
+          :disabled="isFormDisabled"
         />
       </el-form-item>
 
@@ -46,7 +55,7 @@
           :precision="0" 
           controls-position="right" 
           style="width: 100%"
-          :disabled="planData?.status !== 0"
+          :disabled="isFormDisabled"
         />
       </el-form-item>
 
@@ -57,7 +66,7 @@
           :precision="0" 
           controls-position="right" 
           style="width: 100%"
-          :disabled="planData?.status !== 0"
+          :disabled="isFormDisabled"
         />
       </el-form-item>
 
@@ -68,7 +77,7 @@
           :precision="0" 
           controls-position="right" 
           style="width: 100%"
-          :disabled="planData?.status !== 0"
+          :disabled="isFormDisabled"
         />
       </el-form-item>
 
@@ -105,7 +114,7 @@
               format="YYYY-MM-DD"
               value-format="YYYY-MM-DD"
               style="width: 100%"
-              :disabled="delivery.status !== 0 || planData?.status !== 0"
+              :disabled="delivery.status !== 0 || isFormDisabled"
             />
           </el-col>
           <el-col :span="10">
@@ -115,7 +124,7 @@
               :step="100"
               controls-position="right"
               style="width: 100%"
-              :disabled="delivery.status !== 0 || planData?.status !== 0"
+              :disabled="delivery.status !== 0 || isFormDisabled"
               placeholder="数量"
             />
           </el-col>
@@ -136,7 +145,7 @@
         size="small" 
         style="width: 100%; margin-top: 8px;"
         @click="addDelivery"
-        :disabled="planData?.status !== 0"
+        :disabled="isFormDisabled"
       >
         + 添加交货日期
       </el-button>
@@ -154,7 +163,7 @@
           <el-button 
             type="primary" 
             @click="handleSave"
-            :disabled="planData?.status !== 0"
+            :disabled="isFormDisabled"
           >
             {{ isEdit ? '保存修改' : '确认新增' }}
           </el-button>
@@ -328,6 +337,13 @@ function resetForm() {
     ]
   }))
 }
+
+const isFormDisabled = computed(() => {
+  if (!props.planData) return true
+  if (props.planData.status === 2) return true                    // 已归档 → 禁用
+  if (isEdit.value && props.planData.status !== 0) return true   // 编辑模式 + 计划已下发 → 禁用
+  return false                                                     // 新增模式 + 计划未归档 → 可用
+})
 </script>
 
 <style scoped>

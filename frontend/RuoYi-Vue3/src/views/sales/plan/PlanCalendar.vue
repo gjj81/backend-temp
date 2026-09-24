@@ -35,7 +35,7 @@ c:\Users\g2026\Desktop\mes\backend-temp\frontend\RuoYi-Vue3\src\views\sales\plan
             <div class="card-top">
               <span class="card-plan">{{ item.planNo }}</span>
               <el-tag :type="item.status === 0 ? 'success' : 'info'" size="small">
-                {{ item.status === 0 ? '待交货' : '已交货' }}
+                {{ item.status === 0 ? '未下发' : '已下发' }}
               </el-tag>
             </div>
             <div class="card-product">{{ item.productName }}</div>
