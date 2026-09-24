@@ -29,13 +29,9 @@ export function formatDateTag(d) {
   } else if (d.status === 0) {
     bgColor = '#dbeafe'; textColor = '#1e40af'
   } else if (d.status === 1) {
-    bgColor = '#ffedd5'; textColor = '#c2410c'
-  } else if (d.status === 2) {
-    bgColor = '#dcfce7'; textColor = '#15803d'
-  } else if (d.status === 3) {
-    bgColor = '#fee2e2'; textColor = '#b91c1c'
+    bgColor = '#e0e7ff'; textColor = '#3730a3'
   } else {
-    bgColor = '#fecdd3'; textColor = '#9f1239'
+    bgColor = '#f3f4f6'; textColor = '#9ca3af'
   }
 
   return { 
@@ -47,19 +43,15 @@ export function formatDateTag(d) {
 export function getDeliveryStatusType(status) {
   const types = {
     0: '',
-    1: 'warning',
-    2: 'success',
-    3: 'danger'
+    1: 'info'
   }
   return types[status] || 'info'
 }
 
 export function getDeliveryStatusText(status) {
   const texts = {
-    0: '待处理',
-    1: '进行中',
-    2: '已完成',
-    3: '已取消/异常'
+    0: '未下发',
+    1: '已下发'
   }
   return texts[status] || '未知状态'
 }
