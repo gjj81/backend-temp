@@ -3,12 +3,10 @@ package mes.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.IdUtil;
 import mes.common.result.Result;
-import mes.dto.sales.SalesPlanDeliveryDTO;
-import mes.dto.sales.SalesPlanDeliveryUpdateDTO;
-import mes.dto.sales.SalesPlanLineUpdateDTO;
+import mes.dto.sales.SalesPlanFormDeliveryDTO;
+import mes.dto.sales.SalesPlanFormLineDTO;
 import mes.mapper.SalesPlanDeliveryMapper;
 import mes.mapper.SalesPlanLineMapper;
-import mes.service.SalesPlanDeliveryService;
 import mes.service.SalesPlanLineService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,16 +38,16 @@ public class SalesPlanLineServiceImpl implements SalesPlanLineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result<String> update(SalesPlanLineUpdateDTO dto) {
+    public Result<String> update(SalesPlanFormLineDTO dto) {
         int affected = salesPlanLineMapper.updateByPrimaryKey(dto);
         if (affected == 0) {
             throw new RuntimeException("产品行已被他人修改，请刷新后重试");
         }
-        List<SalesPlanDeliveryUpdateDTO> deliveryList = dto.getDeliveries();
+        List<SalesPlanFormDeliveryDTO> deliveryList = dto.getDeliveries();
         if (CollUtil.isNotEmpty(deliveryList)) {
-            List<SalesPlanDeliveryUpdateDTO> updateLines = new ArrayList<>();
-            List<SalesPlanDeliveryUpdateDTO> insertLines = new ArrayList<>();
-            for (SalesPlanDeliveryUpdateDTO delivery : deliveryList) {
+            List<SalesPlanFormDeliveryDTO> updateLines = new ArrayList<>();
+            List<SalesPlanFormDeliveryDTO> insertLines = new ArrayList<>();
+            for (SalesPlanFormDeliveryDTO delivery : deliveryList) {
                 if (delivery.getDeliveryId() == null) {
                     delivery.setDeliveryId(IdUtil.fastSimpleUUID());
                     delivery.setLineId(dto.getLineId());
@@ -61,7 +59,7 @@ public class SalesPlanLineServiceImpl implements SalesPlanLineService {
             /*
              * TODO 批量更新子表（sales_plan_delivery）现在数据量少，并且需要考虑乐观锁更新，后续使用BATCH或者先查后改 方法批量更新,和返回更新失败的节点名称
              */
-            for (SalesPlanDeliveryUpdateDTO delivery : updateLines) {
+            for (SalesPlanFormDeliveryDTO delivery : updateLines) {
                 int i = salesPlanDeliveryMapper.update(delivery);
                 if (i == 0) {
                     throw new RuntimeException("交货节点" + delivery.getNodeName() + "已被他人修改，请刷新后重试");
@@ -76,11 +74,11 @@ public class SalesPlanLineServiceImpl implements SalesPlanLineService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result<String> insert(SalesPlanLineUpdateDTO dto) {
+    public Result<String> insert(SalesPlanFormLineDTO dto) {
         dto.setLineId(IdUtil.fastSimpleUUID());
         salesPlanLineMapper.insert(dto);
 
-        List<SalesPlanDeliveryUpdateDTO> deliveryList = dto.getDeliveries();
+        List<SalesPlanFormDeliveryDTO> deliveryList = dto.getDeliveries();
         if (CollUtil.isNotEmpty(deliveryList)) {
             deliveryList.forEach(delivery -> {
                 delivery.setLineId(dto.getLineId());

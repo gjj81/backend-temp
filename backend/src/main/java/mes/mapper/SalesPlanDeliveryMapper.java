@@ -1,7 +1,6 @@
 package mes.mapper;
 
-import mes.dto.sales.SalesPlanDeliveryUpdateDTO;
-import mes.entity.SalesPlanDelivery;
+import mes.dto.sales.SalesPlanFormDeliveryDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -21,13 +20,13 @@ public interface SalesPlanDeliveryMapper {
 
     int deleteByPlanLineDeliveryList(@Param("planLineIds") List<String> planLineIds);
 
-    int batchInsert(@Param("list") List<SalesPlanDeliveryUpdateDTO> salesPlanDeliveryList);
+    int batchInsert(@Param("list") List<SalesPlanFormDeliveryDTO> salesPlanDeliveryList);
 
-    int batchUpdate(@Param("list") List<SalesPlanDeliveryUpdateDTO> salesPlanDeliveryList);
+    int batchUpdate(@Param("list") List<SalesPlanFormDeliveryDTO> salesPlanDeliveryList);
 
-    int insert(SalesPlanDeliveryUpdateDTO salesPlanDeliveryUpdateDTO);
+    int insert(SalesPlanFormDeliveryDTO salesPlanDeliveryUpdateDTO);
 
-    int update(SalesPlanDeliveryUpdateDTO salesPlanDeliveryUpdateDTO);
+    int update(SalesPlanFormDeliveryDTO salesPlanDeliveryUpdateDTO);
 
-    int updateBatch(@Param("list") List<SalesPlanDeliveryUpdateDTO> dtoList);
+    int updateBatch(@Param("list") List<SalesPlanFormDeliveryDTO> dtoList);
 }

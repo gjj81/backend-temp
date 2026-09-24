@@ -2,7 +2,7 @@ package mes.service.impl;
 
 import lombok.val;
 import mes.common.result.Result;
-import mes.dto.sales.SalesPlanDeliveryUpdateDTO;
+import mes.dto.sales.SalesPlanFormDeliveryDTO;
 import mes.mapper.SalesPlanDeliveryMapper;
 import mes.service.SalesPlanDeliveryService;
 import org.springframework.stereotype.Service;
@@ -31,7 +31,7 @@ public class SalesPlanDeliveryServiceImpl implements SalesPlanDeliveryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result<String> update(SalesPlanDeliveryUpdateDTO dto) {
+    public Result<String> update(SalesPlanFormDeliveryDTO dto) {
         val i = salesPlanDeliveryMapper.update(dto);
         if (i == 0) {
             throw new RuntimeException("更新失败"+dto.getNodeName()+"已被他人修改，请刷新后重试");
@@ -41,7 +41,7 @@ public class SalesPlanDeliveryServiceImpl implements SalesPlanDeliveryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result<String> insert(SalesPlanDeliveryUpdateDTO dto) {
+    public Result<String> insert(SalesPlanFormDeliveryDTO dto) {
         String nodeName = UUID.randomUUID().toString();
         dto.setDeliveryId(nodeName);// 新增时自动生成ID
         val i = salesPlanDeliveryMapper.insert(dto);
@@ -52,7 +52,7 @@ public class SalesPlanDeliveryServiceImpl implements SalesPlanDeliveryService {
     }
 
     @Override
-    public Result<String> updateBatch(List<SalesPlanDeliveryUpdateDTO> dtoList) {
+    public Result<String> updateBatch(List<SalesPlanFormDeliveryDTO> dtoList) {
         val i = salesPlanDeliveryMapper.updateBatch(dtoList);
         if (i == 0) {
                 throw new RuntimeException("更新失败");

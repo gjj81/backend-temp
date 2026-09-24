@@ -8,7 +8,7 @@ import lombok.Data;
 import java.util.Date;
 
 @Data
-public class SalesPlanDeliveryUpdateDTO {
+public class SalesPlanFormDeliveryDTO {
 
     /**
      * 交货节点ID

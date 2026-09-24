@@ -42,7 +42,7 @@
                 (#{item.deliveryId},#{item.lineId},#{item.nodeName},#{item.deliveryDate},#{item.planQuantity},#{item.actualQuantity})
             </foreach>
     </insert>
-    <insert id="insert" parameterType="mes.dto.sales.SalesPlanDeliveryUpdateDTO">
+    <insert id="insert" parameterType="mes.dto.sales.SalesPlanFormDeliveryDTO">
         insert into sales_plan_delivery
         (delivery_id,line_id, node_name, delivery_date, plan_quantity, actual_quantity)
         values

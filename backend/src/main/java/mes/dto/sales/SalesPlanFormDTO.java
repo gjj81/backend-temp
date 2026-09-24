@@ -10,7 +10,7 @@ import java.util.Date;
 import java.util.List;
 
 @Data
-public class SalesPlanUpdateDTO {
+public class SalesPlanFormDTO {
 
     /**
      * 计划ID
@@ -44,5 +44,5 @@ public class SalesPlanUpdateDTO {
     @Size(max = 500, message = "备注长度不能超过500")
     private String remark;
 
-    private List<SalesPlanLineUpdateDTO> lines;
+    private List<SalesPlanFormLineDTO> lines;
 }

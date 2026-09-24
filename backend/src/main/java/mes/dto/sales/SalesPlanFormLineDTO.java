@@ -7,7 +7,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class SalesPlanLineUpdateDTO {
+public class SalesPlanFormLineDTO {
 
     /**
      * 行ID
@@ -45,5 +45,5 @@ public class SalesPlanLineUpdateDTO {
     @NotNull(message = "更新时版本号不能为空", groups = ValidationGroups.LineUpdate.class)
     private Integer version;
 
-    private List<SalesPlanDeliveryUpdateDTO> deliveries;
+    private List<SalesPlanFormDeliveryDTO> deliveries;
 }

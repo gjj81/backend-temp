@@ -1,7 +1,7 @@
 package mes.mapper;
 
 
-import mes.dto.sales.SalesPlanUpdateDTO;
+import mes.dto.sales.SalesPlanFormDTO;
 import mes.vo.sales.SalesPlanVO;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -22,7 +22,7 @@ public interface SalesPlanMapper {
 
     int deleteByPrimaryKey(String planId , Integer version);
 
-    int updateByPrimaryKey(SalesPlanUpdateDTO salesPlanUpdateDTO);
+    int updateByPrimaryKey(SalesPlanFormDTO salesPlanUpdateDTO);
 
-    int insert(SalesPlanUpdateDTO salesPlanUpdateDTO);
+    int insert(SalesPlanFormDTO salesPlanUpdateDTO);
 }

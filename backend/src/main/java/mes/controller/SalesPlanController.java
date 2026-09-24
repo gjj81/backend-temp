@@ -1,9 +1,9 @@
 package mes.controller;
 
 import mes.common.result.Result;
-import mes.dto.sales.SalesPlanDeliveryUpdateDTO;
-import mes.dto.sales.SalesPlanLineUpdateDTO;
-import mes.dto.sales.SalesPlanUpdateDTO;
+import mes.dto.sales.SalesPlanFormDeliveryDTO;
+import mes.dto.sales.SalesPlanFormLineDTO;
+import mes.dto.sales.SalesPlanFormDTO;
 import mes.dto.sales.ValidationGroups;
 import mes.service.SalesPlanDeliveryService;
 import mes.service.SalesPlanLineService;
@@ -70,7 +70,7 @@ public class SalesPlanController {
     @PostMapping("/add/delivery")
     public Result<String> addPlanDelivery(
             @Validated(ValidationGroups.DeliveryAdd.class)
-            @RequestBody SalesPlanDeliveryUpdateDTO dto) {
+            @RequestBody SalesPlanFormDeliveryDTO dto) {
         return salesPlanDeliveryService.insert(dto);
     }
 
@@ -84,7 +84,7 @@ public class SalesPlanController {
     @PostMapping("/add/line")
     public Result<String> addPlanLine(
             @Validated(ValidationGroups.LineAdd.class)
-            @RequestBody SalesPlanLineUpdateDTO dto) {
+            @RequestBody SalesPlanFormLineDTO dto) {
         return salesPlanLineService.insert(dto);
     }
 
@@ -98,7 +98,7 @@ public class SalesPlanController {
     @PostMapping("/add/plan")
     public Result<String> addPlan(
             @Validated(ValidationGroups.PlanAdd.class)
-            @RequestBody SalesPlanUpdateDTO dto) {
+            @RequestBody SalesPlanFormDTO dto) {
         return salesPlanService.insert(dto);
     }
 
@@ -113,7 +113,7 @@ public class SalesPlanController {
     @PostMapping("/update/plan")
     public Result<String> updatePlan(
             @Validated(ValidationGroups.PlanUpdate.class)
-            @RequestBody SalesPlanUpdateDTO dto) {
+            @RequestBody SalesPlanFormDTO dto) {
         return salesPlanService.update(dto);
     }
 
@@ -127,7 +127,7 @@ public class SalesPlanController {
     @PostMapping("/update/line")
     public Result<String> updatePlanLine(
             @Validated(ValidationGroups.LineUpdate.class)
-            @RequestBody SalesPlanLineUpdateDTO dto) {
+            @RequestBody SalesPlanFormLineDTO dto) {
         return salesPlanLineService.update(dto);
     }
 
@@ -141,15 +141,22 @@ public class SalesPlanController {
     @PostMapping("/update/delivery")
     public Result<String> updatePlanDelivery(
             @Validated(ValidationGroups.DeliveryUpdate.class)
-            @RequestBody SalesPlanDeliveryUpdateDTO dto) {
+            @RequestBody SalesPlanFormDeliveryDTO dto) {
         return salesPlanDeliveryService.update(dto);
     }
 
     @PostMapping("/update/list/delivery")
     public Result<String> updatePlanDeliveryList(
             @Validated(ValidationGroups.DeliveryUpdate.class)
-            @RequestBody List<SalesPlanDeliveryUpdateDTO> dtoList) {
+            @RequestBody List<SalesPlanFormDeliveryDTO> dtoList) {
         return salesPlanDeliveryService.updateBatch(dtoList);
+    }
+
+    @PostMapping("/update/list/status")
+    public Result<String> updateStatus(
+        @RequestBody SalesPlanFormDTO dto
+    ) {
+        return null;
     }
 
 }

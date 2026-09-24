@@ -1,22 +1,19 @@
 package mes.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import mes.common.result.Result;
-import mes.dto.sales.SalesPlanDeliveryDTO;
-import mes.dto.sales.SalesPlanDeliveryUpdateDTO;
-import mes.dto.sales.SalesPlanLineUpdateDTO;
-import mes.dto.sales.SalesPlanUpdateDTO;
+import mes.dto.sales.SalesPlanFormDeliveryDTO;
+import mes.dto.sales.SalesPlanFormLineDTO;
+import mes.dto.sales.SalesPlanFormDTO;
 import mes.mapper.SalesPlanDeliveryMapper;
 import mes.mapper.SalesPlanLineMapper;
 import mes.mapper.SalesPlanMapper;
 import mes.service.SalesPlanService;
-import mes.util.SecurityUtils;
 import mes.vo.sales.SalesPlanVO;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -62,19 +59,19 @@ public class SalesPlanServiceImpl implements SalesPlanService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result<String> update(SalesPlanUpdateDTO dto) {
+    public Result<String> update(SalesPlanFormDTO dto) {
         // 1. 更新主表（乐观锁）
         int affected = salesPlanMapper.updateByPrimaryKey(dto);
         if (affected == 0) {
             throw new RuntimeException("销售计划已被他人修改，请刷新后重试");
         }
         // 2.1 分离：有 lineId = 更新，无 lineId = 新增
-        List<SalesPlanLineUpdateDTO> updateLines = new ArrayList<>();
-        List<SalesPlanLineUpdateDTO> insertLines = new ArrayList<>();
+        List<SalesPlanFormLineDTO> updateLines = new ArrayList<>();
+        List<SalesPlanFormLineDTO> insertLines = new ArrayList<>();
         // 2. 处理子表（sales_plan_line）
-        List<SalesPlanLineUpdateDTO> lines = dto.getLines();
+        List<SalesPlanFormLineDTO> lines = dto.getLines();
         if (CollUtil.isNotEmpty(lines)) {
-            for (SalesPlanLineUpdateDTO line : lines) {
+            for (SalesPlanFormLineDTO line : lines) {
                 if (StrUtil.isNotBlank(line.getLineId())) {// 已存在ID，则为更新
                     updateLines.add(line);
                 } else {// 无ID，则为新增
@@ -88,7 +85,7 @@ public class SalesPlanServiceImpl implements SalesPlanService {
                 /*
                 * TODO 批量更新子表（sales_plan_line）现在数据量少，并且需要考虑乐观锁更新，后续使用BATCH或者先查后改 方法批量更新
                 * */
-                for (SalesPlanLineUpdateDTO line : updateLines) {
+                for (SalesPlanFormLineDTO line : updateLines) {
                     int i = salesPlanLineMapper.updateByPrimaryKey(line);
                     if (i == 0) {
                         String message = line.getProductName() + "产品修改失败\n";
@@ -96,14 +93,14 @@ public class SalesPlanServiceImpl implements SalesPlanService {
                     };
                 }
             }
-            List<SalesPlanDeliveryUpdateDTO> updateDels = new ArrayList<>();
-            List<SalesPlanDeliveryUpdateDTO> insertDels = new ArrayList<>();
+            List<SalesPlanFormDeliveryDTO> updateDels = new ArrayList<>();
+            List<SalesPlanFormDeliveryDTO> insertDels = new ArrayList<>();
             // 3. 处理孙表（sales_plan_delivery）
-            for (SalesPlanLineUpdateDTO line : updateLines) {
-                List<SalesPlanDeliveryUpdateDTO> deliveries = line.getDeliveries();
+            for (SalesPlanFormLineDTO line : updateLines) {
+                List<SalesPlanFormDeliveryDTO> deliveries = line.getDeliveries();
                 if (CollUtil.isEmpty(deliveries)) continue;
 
-                for (SalesPlanDeliveryUpdateDTO del : deliveries) {
+                for (SalesPlanFormDeliveryDTO del : deliveries) {
                     if (StrUtil.isNotBlank(del.getDeliveryId())) {// 已存在ID，则为更新
                         updateDels.add(del);
                     } else {
@@ -117,7 +114,7 @@ public class SalesPlanServiceImpl implements SalesPlanService {
              * TODO 批量更新孙表（sales_plan_delivery）现在数据量少，并且需要考虑乐观锁更新，后续使用BATCH或者先查后改 方法批量更新,和返回更新失败的节点名称
              */
             if (CollUtil.isNotEmpty(updateDels)) {
-                for (SalesPlanDeliveryUpdateDTO del : updateDels) {
+                for (SalesPlanFormDeliveryDTO del : updateDels) {
                     int i = salesPlanDeliveryMapper.update(del);
                     if (i == 0) {
                         String message = del.getNodeName() + "节点更新失败\n请检查节点是否存在，或者已经被修改，已被删除\n";
@@ -129,10 +126,10 @@ public class SalesPlanServiceImpl implements SalesPlanService {
             if (CollUtil.isNotEmpty(insertLines)) {
                 salesPlanLineMapper.batchInsert(insertLines);
             }
-            for (SalesPlanLineUpdateDTO line : insertLines) {
-                List<SalesPlanDeliveryUpdateDTO> deliveries = line.getDeliveries();
+            for (SalesPlanFormLineDTO line : insertLines) {
+                List<SalesPlanFormDeliveryDTO> deliveries = line.getDeliveries();
                 if (CollUtil.isEmpty(deliveries)) continue;
-                for (SalesPlanDeliveryUpdateDTO del : deliveries) {
+                for (SalesPlanFormDeliveryDTO del : deliveries) {
                         del.setDeliveryId(IdUtil.fastSimpleUUID());
                         del.setLineId(line.getLineId());
                         insertDels.add(del);
@@ -147,20 +144,20 @@ public class SalesPlanServiceImpl implements SalesPlanService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result<String> insert(SalesPlanUpdateDTO dto) {
+    public Result<String> insert(SalesPlanFormDTO dto) {
         dto.setPlanId(IdUtil.fastSimpleUUID());
         int affected = salesPlanMapper.insert(dto);
         if (affected == 0) {
             throw new RuntimeException("新增失败");
         }
-        List<SalesPlanLineUpdateDTO> lines = dto.getLines();
+        List<SalesPlanFormLineDTO> lines = dto.getLines();
         if (CollUtil.isNotEmpty(lines)) {
-            List<SalesPlanDeliveryUpdateDTO> deliveries = new ArrayList<>();
-            for (SalesPlanLineUpdateDTO line : lines) {
+            List<SalesPlanFormDeliveryDTO> deliveries = new ArrayList<>();
+            for (SalesPlanFormLineDTO line : lines) {
                 line.setLineId(IdUtil.fastSimpleUUID());
                 line.setPlanId(dto.getPlanId());
                 if (CollUtil.isEmpty(line.getDeliveries())) continue;
-                for (SalesPlanDeliveryUpdateDTO del : line.getDeliveries()) {
+                for (SalesPlanFormDeliveryDTO del : line.getDeliveries()) {
                     del.setLineId(line.getLineId());
                     del.setDeliveryId(IdUtil.fastSimpleUUID());
                     deliveries.add(del);

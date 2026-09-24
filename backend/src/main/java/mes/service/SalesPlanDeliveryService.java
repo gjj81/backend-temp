@@ -1,14 +1,14 @@
 package mes.service;
 
 import mes.common.result.Result;
-import mes.dto.sales.SalesPlanDeliveryUpdateDTO;
+import mes.dto.sales.SalesPlanFormDeliveryDTO;
 
 import java.util.List;
 
 public interface SalesPlanDeliveryService {
     Result<String> delete(String planLineId, Integer version);
-    Result<String> update(SalesPlanDeliveryUpdateDTO dto);
-    Result<String> insert(SalesPlanDeliveryUpdateDTO dto);
+    Result<String> update(SalesPlanFormDeliveryDTO dto);
+    Result<String> insert(SalesPlanFormDeliveryDTO dto);
 
-    Result<String> updateBatch(List<SalesPlanDeliveryUpdateDTO> dtoList);
+    Result<String> updateBatch(List<SalesPlanFormDeliveryDTO> dtoList);
 }
