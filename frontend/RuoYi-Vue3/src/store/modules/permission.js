@@ -76,6 +76,11 @@ function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
     if (type && route.children) {
       route.children = filterChildren(route.children)
     }
+    // 自动生成路由name（用于TagsView全局缓存）
+    // 必须在component处理之前生成，避免component为null时route.name缺失导致无法缓存
+    if (route.path) {
+      route.name = normalizeRouteName(route.name, route.path)
+    }
     if (route.component) {
       // Layout ParentView 组件特殊处理
       if (route.component === 'Layout') {
@@ -89,10 +94,6 @@ function filterAsyncRouter(asyncRouterMap, lastRouter = false, type = false) {
         if (!route.component) {
           return false
         }
-      }
-      // 自动生成路由name（用于TagsView全局缓存）
-      if (route.path) {
-        route.name = normalizeRouteName(route.name, route.path)
       }
     }
     if (route.children != null && route.children && route.children.length) {

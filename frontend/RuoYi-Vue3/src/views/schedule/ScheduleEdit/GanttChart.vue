@@ -4,7 +4,7 @@
       <div class="gantt-corner">产线 \ 日期</div>
       <div class="date-headers" ref="dateHeadersRef">
         <div 
-          v-for="day in dateRange" 
+          v-for="day in ganttDays" 
           :key="day.date"
           :class="['date-cell', { 
             'is-today': day.isToday,
@@ -29,7 +29,7 @@
         
         <div class="row-cells">
           <div 
-            v-for="day in dateRange" 
+            v-for="day in ganttDays" 
             :key="day.date"
             :class="['cell', { 
               'is-today': day.isToday,
@@ -46,7 +46,8 @@
                 :key="span.spanId"
                 class="span-block"
                 :class="{ 
-                  ['span-status-' + span.status]: true,
+                  'span-draft': span._isNew,
+                  ['span-status-' + span.status]: !span._isNew,
                   'span-selected': span.spanId === selectedSpanId,
                   'span-matched': selectedLine && span.lineId === selectedLine.lineId
                 }"
@@ -80,7 +81,7 @@ const bodyRef = ref(null)
 const props = defineProps({
   spans: { type: Array, default: () => [] },
   prodLines: { type: Array, default: () => [] },
-  yearMonth: { type: String, default: '' },
+  dateRange: { type: Array, default: () => [] },
   selectedLine: { type: Object, default: null },
   selectedSpanId: { type: [String, Number], default: null },
   deliveryDates: { type: Set, default: () => new Set() },
@@ -89,22 +90,28 @@ const props = defineProps({
 
 const emit = defineEmits(['create', 'move', 'select'])
 
-const dateRange = computed(() => {
-  if (!props.yearMonth) return []
-  const [year, month] = props.yearMonth.split('-').map(Number)
-  const daysInMonth = new Date(year, month, 0).getDate()
-  const today = new Date()
+const ganttDays = computed(() => {
+  if (!props.dateRange || props.dateRange.length < 2) return []
+  const start = new Date(props.dateRange[0])
+  const end = new Date(props.dateRange[1])
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) return []
   
-  return Array.from({ length: daysInMonth }, (_, i) => {
-    const date = `${year}-${String(month).padStart(2, '0')}-${String(i + 1).padStart(2, '0')}`
-    const d = new Date(date)
-    return {
-      date,
-      day: i + 1,
-      isToday: d.toDateString() === today.toDateString(),
-      isWeekend: d.getDay() === 0 || d.getDay() === 6
-    }
-  })
+  const days = []
+  const today = new Date()
+  const current = new Date(start)
+  while (current <= end) {
+    const dateStr = current.getFullYear() + '-' 
+      + String(current.getMonth() + 1).padStart(2, '0') + '-' 
+      + String(current.getDate()).padStart(2, '0')
+    days.push({
+      date: dateStr,
+      day: current.getDate(),
+      isToday: current.toDateString() === today.toDateString(),
+      isWeekend: current.getDay() === 0 || current.getDay() === 6
+    })
+    current.setDate(current.getDate() + 1)
+  }
+  return days
 })
 
 function getSpansForCell(lineId, date) {
@@ -142,8 +149,7 @@ function getBlockStyle(index) {
 
 function getMaxBlocksInRow(prodLineId) {
   let max = 1
-  if (!dateRange.value) return max
-  dateRange.value.forEach(day => {
+  ganttDays.value.forEach(day => {
     const count = getSpansForCell(prodLineId, day.date).length
     if (count > max) max = count
   })
@@ -202,7 +208,7 @@ function onSpanClick(event, span) {
 }
 
 function onBlockMouseDown(event, span) {
-  if (span.status !== 0) {
+  if (!span._isNew) {
     emit('select', span)
     return
   }
@@ -488,13 +494,18 @@ onBeforeUnmount(() => {
   padding-left: 8px;
   z-index: 3;
 }
-.span-status-0 { 
-  background: #f4f4f5; 
+.span-draft { 
+  background: #fafafa; 
   border: 2px dashed #c0c4cc; 
-  color: #909399; 
+  color: #c0c4cc; 
   cursor: grab; 
 }
-.span-status-0:active { cursor: grabbing; }
+.span-draft:active { cursor: grabbing; }
+.span-status-0 { 
+  background: #f4f4f5; 
+  border: 2px solid #c0c4cc; 
+  color: #909399; 
+}
 .span-status-1 { 
   background: #409eff; 
   border: 1px solid #337ecc; 

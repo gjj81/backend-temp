@@ -2,8 +2,8 @@
   <div class="edit-bar">
     <div class="edit-bar-content">
       <div class="edit-info">
-        <el-tag :type="getSpanStatusType(spanData.status)" size="small">
-          {{ getSpanStatusText(spanData.status) }}
+        <el-tag :type="getSpanDisplayStatus(spanData).type" size="small">
+          {{ getSpanDisplayStatus(spanData).text }}
         </el-tag>
       </div>
 
@@ -65,7 +65,7 @@
       <div class="edit-actions">
         <template v-if="isEditable">
           <el-button type="primary" size="small" @click="handleSave">保存</el-button>
-          <el-button type="success" size="small" @click="handleIssue">下发</el-button>
+          <el-button v-if="!isNewBlock" type="success" size="small" @click="handleIssue">下发</el-button>
           <el-button size="small" @click="$emit('close')">取消</el-button>
           <el-button
             type="danger"
@@ -77,13 +77,7 @@
           </el-button>
         </template>
 
-        <template v-else-if="spanData.status === 2">
-          <el-button size="small" type="warning" disabled>生产中...</el-button>
-          <el-button size="small" @click="$emit('close')">关闭</el-button>
-        </template>
-
         <template v-else>
-          <el-tag type="success" size="small">已完工</el-tag>
           <el-button size="small" @click="$emit('close')">关闭</el-button>
         </template>
       </div>
@@ -94,7 +88,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getSpanStatusText, getSpanStatusType } from './utils.js'
+import { getSpanDisplayStatus } from './utils.js'
 
 const props = defineProps({
   spanData: { type: Object, required: true },
@@ -113,7 +107,7 @@ const isNewBlock = computed(() => props.spanData?._isNew === true)
 
 const isEditable = computed(() => {
   const s = props.spanData?.status
-  return s === 0 || s === 1
+  return props.spanData?._isNew || s === 0
 })
 
 watch(() => props.spanData, (newVal) => {
@@ -168,6 +162,10 @@ async function handleSave() {
 }
 
 async function handleDelete() {
+  if (!props.spanData?._isNew && props.spanData?.status !== 0) {
+    ElMessage.warning('已下发/生产中/已完工的排产块不允许删除')
+    return
+  }
   try {
     const label = isNewBlock.value
       ? `草稿块（${editForm.value.dailyQuantity}件/天 × ${editForm.value.days || 1}天）`

@@ -1,6 +1,6 @@
 package mes.service;
 
-import mes.vo.MenuTreeVO;
+import mes.vo.base.MenuTreeVO;
 
 import java.util.List;
 

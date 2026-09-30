@@ -62,7 +62,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup name="ShopKanban">
 import { computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 

@@ -7,9 +7,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import mes.common.result.Result;
+import mes.dto.sales.SalesPlanStatusDTO;
 import mes.dto.sales.SalesPlanFormDeliveryDTO;
 import mes.dto.sales.SalesPlanFormLineDTO;
 import mes.dto.sales.SalesPlanFormDTO;
+import mes.dto.sales.SalesPlanLineStatusDTO;
 import mes.mapper.SalesPlanDeliveryMapper;
 import mes.mapper.SalesPlanLineMapper;
 import mes.mapper.SalesPlanMapper;
@@ -169,5 +171,23 @@ public class SalesPlanServiceImpl implements SalesPlanService {
             }
         }
         return Result.success("新增成功");
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Result<String> updateStatus(SalesPlanStatusDTO dto) {
+
+        int affected = salesPlanMapper.updateStatus(dto.getPlanId(), dto.getStatus(), dto.getVersion());
+        if (affected == 0) {
+            throw new RuntimeException("计划状态更新失败");
+        }
+        List<SalesPlanLineStatusDTO> lineStatusList = dto.getLineStatusList();
+        if (CollUtil.isNotEmpty(lineStatusList)) {
+            val i = salesPlanLineMapper.batchStatusUpdate(lineStatusList, dto.getStatus());
+            if (i == 0) {
+                throw new RuntimeException("计划行状态更新失败");
+            }
+        }
+        return Result.success("计划状态更新成功");
     }
 }

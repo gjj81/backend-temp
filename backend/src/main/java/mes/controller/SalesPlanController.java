@@ -1,7 +1,7 @@
 package mes.controller;
 
 import mes.common.result.Result;
-import mes.dto.SalesPlanStatusDTO;
+import mes.dto.sales.SalesPlanStatusDTO;
 import mes.dto.sales.*;
 import mes.service.SalesPlanDeliveryService;
 import mes.service.SalesPlanLineService;
@@ -152,14 +152,16 @@ public class SalesPlanController {
 
     @PostMapping("/update/plan/status")
     public Result<String> updatePlanStatus(
-        @RequestBody SalesPlanStatusDTO dto
+            @Validated(ValidationGroups.PlanUpdate.class)
+            @RequestBody  SalesPlanStatusDTO dto
     ) {
+        salesPlanService.updateStatus(dto);
         return null;
     }
 
     @PostMapping("/update/line/status")
     public Result<String> updatePlanLineStatus(
-        @RequestBody SalesPlanLineStatusDTO dtoList
+        @RequestBody SalesPlanLineStatusDTO dto
     ) {
         return null;
     }

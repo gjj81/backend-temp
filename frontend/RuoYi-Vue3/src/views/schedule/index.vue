@@ -21,186 +21,316 @@
       </div>
     </div>
 
-    <div v-if="activeView === 'gantt'" class="gantt-view">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <span class="filter-label">车间</span>
-          <el-select v-model="selectedWorkshop" placeholder="选择车间" size="default" style="width: 140px;" @change="onWorkshopChange">
-            <el-option v-for="w in workshops" :key="w.id" :label="w.name" :value="w.id" />
-          </el-select>
+    <div v-if="activeView === 'gantt'" class="toolbar">
+      <div class="toolbar-left">
+        <span class="filter-label">车间</span>
+        <el-select v-model="selectedWorkshop" placeholder="选择车间" size="default" style="width: 140px;" @change="onWorkshopChange">
+          <el-option v-for="w in workshops" :key="w.id" :label="w.name" :value="w.id" />
+        </el-select>
 
-          <el-date-picker 
-            v-model="yearMonth" 
-            type="month" 
-            value-format="YYYY-MM" 
-            style="width: 130px; margin-left: 12px;"
-            @change="onMonthChange"
-          />
+        <el-date-picker 
+          v-model="dateRange" 
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+          value-format="YYYY-MM-DD"
+          style="width: 260px; margin-left: 12px;"
+        />
 
-          <span class="filter-label">客户：</span>
-          <el-select v-model="selectedCustomer" placeholder="全部" clearable size="default" style="width: 120px;">
-            <el-option v-for="c in customerList" :key="c" :label="c" :value="c" />
-          </el-select>
-        </div>
-
-        <div class="toolbar-right">
-          <span class="draft-count" v-if="draftCount > 0">草稿 {{ draftCount }} 条</span>
-          <span class="issued-count" v-if="issuedCount > 0">未下发 {{ issuedCount }} 条</span>
-          <el-button type="primary" size="default" @click="handleBatchSave" :disabled="draftCount === 0">
-            批量保存
-          </el-button>
-          <el-button type="success" size="default" @click="handleBatchIssue" :disabled="issuedCount === 0">
-            批量下发
-          </el-button>
-          <el-button size="default" @click="handleResetData">
-            重置数据
-          </el-button>
-        </div>
+        <span class="filter-label">客户：</span>
+        <el-select v-model="selectedCustomer" placeholder="全部" clearable size="default" style="width: 120px;">
+          <el-option v-for="c in customerList" :key="c" :label="c" :value="c" />
+        </el-select>
       </div>
 
-      <div class="board-container">
+      <div class="toolbar-right">
+        <span class="draft-count" v-if="draftCount > 0">未保存 {{ draftCount }} 条</span>
+        <span class="issued-count" v-if="issuedCount > 0">待下发 {{ issuedCount }} 条</span>
+        <el-button type="primary" size="default" @click="handleBatchSave" :disabled="draftCount === 0">
+          批量保存
+        </el-button>
+        <el-button type="success" size="default" @click="handleBatchIssue" :disabled="issuedCount === 0">
+          批量下发
+        </el-button>
+        <el-button size="default" @click="handleResetData">
+          重置数据
+        </el-button>
+      </div>
+    </div>
+
+    <div class="board-container">
+      <keep-alive>
         <ScheduleEdit
+          v-if="activeView === 'gantt'"
+          key="schedule-edit"
           :board-data="boardData"
-          :year-month="yearMonth"
+          :date-range="dateRange"
           :workshop-id="selectedWorkshop"
           :customer-filter="selectedCustomer"
           @save="handleSave"
           @delete="handleDelete"
           @select-line="handleSelectLine"
         />
-      </div>
-    </div>
-
-    <div v-else class="kanban-view">
-      <ShopKanban :board-data="boardData" />
+        <ShopKanban v-else key="shop-kanban" :board-data="boardData" />
+      </keep-alive>
     </div>
   </div>
 </template>
 
-<script setup name="SchedulePlan">
-import { ref, computed } from 'vue'
+<script setup name="ProductionPlan">
+import { ref, computed, watch, onMounted, onActivated } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { listWorkbenchProducts, listProdProducts, saveSchedules, issueSchedules, deleteSchedule } from '@/api/schedule'
+import { normalizeProductList, ProdScheduleSaveDTO } from '@/types/schedule'
+import { selectWorkshop, selectProdLine } from '@/api/base'
 import ScheduleEdit from './ScheduleEdit/index.vue'
 import ShopKanban from './ShopKanban.vue'
 
-const yearMonth = ref('2026-05')
+let _cachedWorkbenchProducts = null
+let _cachedSpans = null
+let _cachedProdLines = null
+let _cachedDraftSpans = null
+let _cachedWorkshops = null
+let _cachedWorkshopConfig = {}
+let _lastDateRange = null
+let _lastWorkshopId = null
+
+const yearMonth = ref('2026-10')
+const dateRange = ref(_lastDateRange || ['2026-10-01', '2026-10-31'])
 const activeView = ref('gantt')
-const selectedWorkshop = ref(1)
+const selectedWorkshop = ref(_lastWorkshopId)
 const selectedCustomer = ref('')
+const loading = ref(false)
 
-const workshops = ref([
-  { id: 1, name: '机加车间' },
-  { id: 2, name: '装配车间' }
-])
+const workbenchProducts = ref(_cachedWorkbenchProducts ?? [])
 
-const basePoolLines = [
-  {
-    lineId: 1, productName: '1.5T某如皋进气', status: 0, customer: '奇瑞',
-    totalQuantity: 12000, forecastQuantity: 2700, openingInventory: 200, scheduledQty: 4000
-  },
-  {
-    lineId: 2, productName: '2.0T排气凸轮轴', status: 0, customer: '奇瑞',
-    totalQuantity: 45000, forecastQuantity: 15000, openingInventory: 0, scheduledQty: 15700
-  },
-  {
-    lineId: 3, productName: '1.0T进气凸轮轴', status: 0, customer: '奇瑞汽车',
-    totalQuantity: 5000, forecastQuantity: 4000, openingInventory: 200, scheduledQty: 3000
-  },
-  {
-    lineId: 4, productName: '1.5T排气凸轮轴', status: 2, customer: '奇瑞汽车',
-    totalQuantity: 5000, forecastQuantity: 5000, openingInventory: 3200, scheduledQty: 4000
-  },
-  {
-    lineId: 5, productName: '2.0T排气凸轮轴', status: 0, customer: '奇瑞汽车',
-    totalQuantity: 45000, forecastQuantity: 5000, openingInventory: 0, scheduledQty: 0
+const workshops = ref(_cachedWorkshops ?? [])
+
+const workshopConfig = _cachedWorkshopConfig
+
+async function fetchWorkshops() {
+  if (_cachedWorkshops && _cachedWorkshops.length > 0) {
+    workshops.value = [..._cachedWorkshops]
+    return
   }
-]
-
-const workshopConfig = {
-  1: { name: '机加车间', prodLines: [{ lineId: 1, lineName: '一号机' }, { lineId: 2, lineName: '二号机' }, { lineId: 3, lineName: '三号机' }] },
-  2: { name: '装配车间', prodLines: [{ lineId: 4, lineName: '装配线A' }, { lineId: 5, lineName: '装配线B' }] }
-}
-
-function buildDeliveryList(lineId, month) {
-  const [y, m] = month.split('-').map(Number)
-  const day = 5 + (lineId * 3)
-  return [
-    { deliveryId: lineId * 100 + 1, deliveryDate: `${y}-${String(m).padStart(2, '0')}-${String(day).padStart(2, '0')}`, planQuantity: 4000, status: 0 },
-    { deliveryId: lineId * 100 + 2, deliveryDate: `${y}-${String(m).padStart(2, '0')}-${String(day + 10).padStart(2, '0')}`, planQuantity: 4000, status: 0 },
-    { deliveryId: lineId * 100 + 3, deliveryDate: `${y}-${String(m).padStart(2, '0')}-${String(day + 11).padStart(2, '0')}`, planQuantity: 4000, status: 0 }
-  ]
-}
-
-function buildPoolLines(month) {
-  return basePoolLines.map(line => {
-    const outs = buildDeliveryList(line.lineId, month)
-    return {
-      ...line,
-      earliestDelivery: outs[0]?.deliveryDate || null,
-      deliveryList: outs
-    }
-  })
-}
-
-function buildSpans(workshopId, month) {
-  const [y, m] = month.split('-').map(Number)
-  const pad = (d) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`
-  const pls = workshopConfig[workshopId]?.prodLines || workshopConfig[1].prodLines
-
-  const templates = workshopId === 1 ? [
-    { spanId: 1,  lineId: 1, prodLineId: 1, day: 6,  qty: 1000, status: 1 },
-    { spanId: 2,  lineId: 1, prodLineId: 1, day: 7,  qty: 1000, status: 1 },
-    { spanId: 3,  lineId: 1, prodLineId: 1, day: 10, qty: 1660, status: 1 },
-    { spanId: 4,  lineId: 1, prodLineId: 2, day: 11, qty: 1000, status: 0 },
-    { spanId: 5,  lineId: 2, prodLineId: 2, day: 9,  qty: 1000, status: 2 },
-    { spanId: 11, lineId: 2, prodLineId: 3, day: 16, qty: 1800, status: 3 },
-    { spanId: 7,  lineId: 3, prodLineId: 1, day: 13, qty: 1500, status: 1 },
-    { spanId: 10, lineId: 3, prodLineId: 2, day: 14, qty: 800,  status: 0 },
-    { spanId: 8,  lineId: 4, prodLineId: 1, day: 4,  qty: 1000, status: 2 },
-    { spanId: 9,  lineId: 4, prodLineId: 2, day: 6,  qty: 1000, status: 3 }
-  ] : [
-    { spanId: 51, lineId: 1, prodLineId: 4, day: 8,  qty: 1200, status: 1 },
-    { spanId: 52, lineId: 1, prodLineId: 4, day: 9,  qty: 1200, status: 1 },
-    { spanId: 53, lineId: 2, prodLineId: 5, day: 12, qty: 2000, status: 0 },
-    { spanId: 54, lineId: 2, prodLineId: 5, day: 13, qty: 2000, status: 0 },
-    { spanId: 55, lineId: 3, prodLineId: 4, day: 15, qty: 800,  status: 1 },
-    { spanId: 56, lineId: 4, prodLineId: 5, day: 5,  qty: 900,  status: 2 }
-  ]
-
-  return templates.map(t => {
-    const p = pls.find(pl => pl.lineId === t.prodLineId)
-    return {
-      spanId: t.spanId,
-      lineId: t.lineId,
-      prodLineId: t.prodLineId,
-      prodLineName: p?.lineName || '未知产线',
-      startDate: pad(t.day),
-      endDate: pad(t.day),
-      dailyQuantity: t.qty,
-      days: 1,
-      status: t.status
-    }
-  })
-}
-
-const boardData = ref({ poolLines: [], spans: [], prodLines: [] })
-
-function rebuildBoardData() {
-  boardData.value = {
-    poolLines: buildPoolLines(yearMonth.value),
-    spans: buildSpans(selectedWorkshop.value, yearMonth.value),
-    prodLines: (workshopConfig[selectedWorkshop.value] || workshopConfig[1]).prodLines
+  try {
+    const res = await selectWorkshop()
+    const list = res.data ?? res ?? []
+    workshops.value = list.map(w => ({
+      id: w.workshopId,
+      name: w.workshopName,
+      code: w.workshopCode
+    }))
+    _cachedWorkshops = [...workshops.value]
+  } catch {
+    ElMessage.error('获取车间列表失败')
   }
 }
 
-rebuildBoardData()
-
-function onWorkshopChange() {
-  rebuildBoardData()
+async function fetchProdLines() {
+  if (Object.keys(_cachedWorkshopConfig).length > 0) {
+    Object.assign(workshopConfig, _cachedWorkshopConfig)
+    return
+  }
+  try {
+    const res = await selectProdLine()
+    const list = res.data ?? res ?? []
+    const grouped = {}
+    list.forEach(pl => {
+      const wsId = pl.workshopId
+      if (!grouped[wsId]) grouped[wsId] = []
+      grouped[wsId].push({
+        lineId: pl.prodLineId,
+        lineName: pl.lineName,
+        lineCode: pl.lineCode,
+        workshopId: wsId
+      })
+    })
+    Object.keys(grouped).forEach(wsId => {
+      if (!workshopConfig[wsId]) workshopConfig[wsId] = {}
+      workshopConfig[wsId].prodLines = grouped[wsId]
+    })
+    _cachedWorkshopConfig = JSON.parse(JSON.stringify(workshopConfig))
+  } catch {
+    ElMessage.error('获取产线列表失败')
+  }
 }
 
-function onMonthChange() {
-  rebuildBoardData()
+function restoreBoardData() {
+  if (_cachedWorkbenchProducts != null) {
+    workbenchProducts.value = [..._cachedWorkbenchProducts]
+  }
+  boardData.value.poolLines = _cachedWorkbenchProducts != null
+    ? buildPoolLinesFromApi(_cachedWorkbenchProducts)
+    : []
+  boardData.value.spans = _cachedSpans != null ? [..._cachedSpans] : []
+  boardData.value.prodLines = _cachedProdLines != null ? [..._cachedProdLines] : []
+  boardData.value.draftSpans = _cachedDraftSpans != null ? [..._cachedDraftSpans] : []
+}
+
+const boardData = ref({
+  poolLines: _cachedWorkbenchProducts != null ? buildPoolLinesFromApi(_cachedWorkbenchProducts) : [],
+  spans: _cachedSpans ?? [],
+  draftSpans: _cachedDraftSpans ?? [],
+  prodLines: _cachedProdLines ?? []
+})
+
+function buildPoolLinesFromApi(products) {
+  return (products || []).map(p => ({
+    lineId: Number(p.lineId) || p.lineId,
+    productName: p.productName || '',
+    status: p.lineStatus ?? 0,
+    customer: p.customer || '',
+    planMonth: p.planMonth || '', 
+    totalQuantity: p.totalQuantity || 0,
+    forecastQuantity: p.forecastQuantity || 0,
+    openingInventory: p.openingInventory || 0,
+    scheduledQuantity: p.scheduledQuantity || 0,
+    earliestDelivery: p.deliveryNodes?.[0]?.deliveryDate || null,
+    deliveryList: (p.deliveryNodes || []).map((d, i) => ({
+      deliveryId: `${p.lineId}_${i}`,
+      deliveryDate: d.deliveryDate || null,
+      planQuantity: d.planQuantity || 0,
+      status: 0
+    }))
+  }))
+}
+
+function getCacheKey() {
+  return `${selectedWorkshop.value}_${dateRange.value?.[0]}_${dateRange.value?.[1]}`
+}
+
+function isCacheValid() {
+  const currentKey = getCacheKey()
+  const cachedKey = `${_lastWorkshopId}_${_lastDateRange?.[0]}_${_lastDateRange?.[1]}`
+  return _cachedWorkbenchProducts != null && _cachedSpans != null && currentKey === cachedKey
+}
+
+async function refreshWorkbench() {
+  try {
+    const res = await listWorkbenchProducts()
+    workbenchProducts.value = normalizeProductList(res ?? [])
+    _cachedWorkbenchProducts = [...workbenchProducts.value]
+  } catch { /* ignore */ }
+  rebuildPoolLines()
+}
+
+function rebuildPoolLines() {
+  boardData.value.poolLines = buildPoolLinesFromApi(workbenchProducts.value)
+}
+
+async function rebuildSpans(force = false) {
+  const wsId = selectedWorkshop.value
+  if (!wsId || !dateRange.value || dateRange.value.length < 2) return
+  const startDate = dateRange.value[0]
+  const endDate = dateRange.value[1]
+
+  if (!force && _cachedSpans != null && _lastWorkshopId === wsId && _lastDateRange?.[0] === startDate && _lastDateRange?.[1] === endDate) {
+    const prodLines = workshopConfig[wsId]?.prodLines || []
+    boardData.value.spans = [..._cachedSpans]
+    boardData.value.prodLines = [...prodLines]
+    return
+  }
+
+  try {
+    const res = await listProdProducts(startDate, endDate)
+    const list = res ?? []
+    const prodLines = workshopConfig[wsId]?.prodLines || []
+    const plMap = {}
+    prodLines.forEach(pl => { plMap[pl.lineId] = pl })
+
+    boardData.value.spans = list
+      .filter(s => String(s.workshopId) === String(wsId))
+      .map(s => {
+        const pl = plMap[s.prodLineId]
+        return {
+          spanId: s.scheduleId,
+          lineId: s.lineId,
+          prodLineId: s.prodLineId,
+          prodLineName: pl?.lineName || s.workshopName || '未知产线',
+          startDate: formatDateStr(s.scheduleDate),
+          endDate: formatDateStr(s.scheduleDate),
+          dailyQuantity: s.quantity || 0,
+          days: 1,
+          status: s.status ?? 0,
+          version: s.version ?? 1,
+          actualQuantity: s.actualQuantity,
+          qualifiedQuantity: s.qualifiedQuantity,
+          defectQuantity: s.defectQuantity
+        }
+      })
+    boardData.value.prodLines = [...prodLines]
+    _cachedSpans = [...boardData.value.spans]
+    _cachedProdLines = [...boardData.value.prodLines]
+    _lastDateRange = [startDate, endDate]
+    _lastWorkshopId = wsId
+  } catch {
+    ElMessage.error('获取排产数据失败')
+  }
+}
+
+function formatDateStr(d) {
+  if (d == null || d === '') return ''
+  if (typeof d === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d
+  const dt = d instanceof Date ? d : new Date(d)
+  if (isNaN(dt.getTime())) return ''
+  return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0')
+}
+
+async function fetchAndRebuild(force = false) {
+  if (!force && isCacheValid()) {
+    restoreBoardData()
+    return
+  }
+
+  loading.value = true
+  try {
+    const res = await listWorkbenchProducts()
+    workbenchProducts.value = normalizeProductList(res ?? [])
+    _cachedWorkbenchProducts = [...workbenchProducts.value]
+  } catch {
+    ElMessage.error('获取月度销售计划失败')
+    workbenchProducts.value = []
+  } finally {
+    loading.value = false
+  }
+  rebuildPoolLines()
+  await rebuildSpans(force)
+  _lastDateRange = [dateRange.value[0], dateRange.value[1]]
+  _lastWorkshopId = selectedWorkshop.value
+}
+
+const dateRangeKey = computed(() => dateRange.value ? `${dateRange.value[0]}_${dateRange.value[1]}` : '')
+
+watch(dateRangeKey, (newKey, oldKey) => {
+  if (oldKey === undefined) return
+  if (newKey && newKey !== oldKey) {
+    fetchAndRebuild(true)
+  }
+})
+
+onMounted(async () => {
+  await fetchWorkshops()
+  await fetchProdLines()
+  if (workshops.value.length > 0 && !selectedWorkshop.value) {
+    selectedWorkshop.value = workshops.value[0].id
+  }
+  if (isCacheValid()) {
+    restoreBoardData()
+  } else {
+    await fetchAndRebuild()
+  }
+})
+
+onActivated(() => {
+  if (isCacheValid()) {
+    restoreBoardData()
+  }
+})
+
+async function onWorkshopChange() {
+  await rebuildSpans(true)
 }
 
 const customerList = computed(() => {
@@ -208,10 +338,10 @@ const customerList = computed(() => {
   return [...customers]
 })
 
-const draftCount = computed(() => boardData.value.spans.filter(s => s.status === 0).length)
-const issuedCount = computed(() => boardData.value.spans.filter(s => s.status === 1).length)
+const draftCount = computed(() => boardData.value.draftSpans.length)
+const issuedCount = computed(() => boardData.value.spans.filter(s => s.status === 0).length)
 
-function handleSave(payload) {
+async function handleSave(payload) {
   switch (payload.type) {
     case 'span:add': {
       const newSpan = payload.data
@@ -228,7 +358,7 @@ function handleSave(payload) {
       const pl = boardData.value.prodLines.find(p => p.lineId === completeSpan.prodLineId)
       if (pl) completeSpan.prodLineName = pl.lineName
 
-      boardData.value.spans.push(completeSpan)
+      boardData.value.draftSpans.push(completeSpan)
 
       const line = boardData.value.poolLines.find(l => l.lineId === completeSpan.lineId)
       if (line) line.scheduledQty = (line.scheduledQty || 0) + completeSpan.dailyQuantity
@@ -236,7 +366,7 @@ function handleSave(payload) {
     }
     case 'span:move': {
       const { spanId, date, prodLineId } = payload.data
-      const span = boardData.value.spans.find(s => s.spanId === spanId)
+      const span = findSpan(spanId)
       if (span) {
         span.startDate = date
         span.endDate = date
@@ -249,29 +379,88 @@ function handleSave(payload) {
       }
       break
     }
-    case 'span:update': {
-      const data = payload.data
-      const idx = boardData.value.spans.findIndex(s => s.spanId === data.spanId)
-      if (idx !== -1) {
-        if (data.startDate) { data.endDate = data.startDate; data.days = 1 }
-        Object.assign(boardData.value.spans[idx], data)
+    case 'span:save': {
+      const { spanId } = payload.data
+      const span = findSpan(spanId)
+      if (!span) break
+      try {
+        await saveSchedules([spanToDTO(span, 0)])
+        if (boardData.value.draftSpans.includes(span)) {
+          boardData.value.draftSpans = boardData.value.draftSpans.filter(s => s.spanId !== spanId)
+        }
+        await rebuildSpans(true)
+        ElMessage.success('保存成功')
+      } catch (e) {
+        ElMessage.error(e?.message || '保存失败')
+      }
+      break
+    }
+    case 'span:issue': {
+      const { spanId, version } = payload.data
+      const span = findSpan(spanId)
+      if (!span || span.status !== 0) break
+      try {
+        const dto = spanToDTO(span, 1)
+        dto.version = version || span.version
+        await issueSchedules([dto])
+        span.status = 1
+        _cachedSpans = null
+        await refreshWorkbench()
+        ElMessage.success('下发成功')
+      } catch (e) {
+        ElMessage.error(e?.message || '下发失败')
       }
       break
     }
   }
 }
 
-function handleDelete(payload) {
+function findSpan(spanId) {
+  return boardData.value.spans.find(s => s.spanId === spanId)
+      || boardData.value.draftSpans.find(s => s.spanId === spanId)
+}
+
+function spanToDTO(span, targetStatus) {
+  const ws = workshops.value.find(w => w.id === selectedWorkshop.value)
+  return new ProdScheduleSaveDTO({
+    scheduleId: span._isNew ? undefined : (span.scheduleId || String(span.spanId)),
+    lineId: String(span.lineId),
+    prodLineId: String(span.prodLineId),
+    scheduleDate: span.startDate,
+    quantity: span.dailyQuantity,
+    workshopId: selectedWorkshop.value,
+    workshopName: ws?.name || '',
+    productId: span.productId,
+    status: targetStatus,
+    version: span.version ?? 1
+  })
+}
+
+async function handleDelete(payload) {
   if (payload.type === 'span' && payload.data) {
     const spanId = payload.data.spanId || payload.data
-    const idx = boardData.value.spans.findIndex(s => s.spanId === spanId)
-    if (idx !== -1) {
-      const removed = boardData.value.spans.splice(idx, 1)[0]
-      const line = boardData.value.poolLines.find(l => l.lineId === removed.lineId)
-      if (line && line.scheduledQty > 0) {
-        line.scheduledQty = Math.max(0, line.scheduledQty - removed.dailyQuantity)
+    const span = findSpan(spanId)
+    if (!span) return
+    if (!span._isNew && span.status !== 0) {
+      ElMessage.warning('已下发/生产中/已完工的排产块不允许删除')
+      return
+    }
+    try {
+      if (!span._isNew) {
+        const id = span.scheduleId || String(span.spanId)
+        await deleteSchedule(id, span.version ?? 1)
       }
+      let idx = boardData.value.spans.findIndex(s => s.spanId === spanId)
+      if (idx !== -1) {
+        boardData.value.spans.splice(idx, 1)
+      } else {
+        idx = boardData.value.draftSpans.findIndex(s => s.spanId === spanId)
+        if (idx !== -1) boardData.value.draftSpans.splice(idx, 1)
+      }
+      _cachedSpans = null
       ElMessage.success('已删除排产块')
+    } catch (e) {
+      ElMessage.error(e?.message || '删除失败')
     }
   }
 }
@@ -279,41 +468,50 @@ function handleDelete(payload) {
 function handleSelectLine(line) {}
 
 async function handleBatchSave() {
+  if (draftCount.value === 0) return
   try {
     await ElMessageBox.confirm(`确定要批量保存 ${draftCount.value} 条草稿吗？`, '批量保存', {
       confirmButtonText: '确认保存', cancelButtonText: '取消', type: 'warning'
     })
-    boardData.value.spans.forEach(span => {
-      if (span.status === 0) {
-        span.status = 1
-        span._isNew = false
-        span.days = 1
-        span.endDate = span.startDate
-      }
-    })
-    ElMessage.success(`已批量保存 ${draftCount.value} 条`)
-  } catch (_) {}
+    const dtoList = boardData.value.draftSpans.map(s => spanToDTO(s, 0))
+    await saveSchedules(dtoList)
+    boardData.value.draftSpans = []
+    await rebuildSpans(true)
+    ElMessage.success(`已批量保存 ${dtoList.length} 条`)
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.message || '保存失败')
+    }
+  }
 }
 
 async function handleBatchIssue() {
+  if (issuedCount.value === 0) return
   try {
     await ElMessageBox.confirm(`确定要批量下发 ${issuedCount.value} 条未下发排产吗？`, '批量下发', {
       confirmButtonText: '确认下发', cancelButtonText: '取消', type: 'success'
     })
-    boardData.value.spans.forEach(span => {
-      if (span.status === 1) span.status = 2
-    })
-    ElMessage.success(`已批量下发 ${issuedCount.value} 条`)
-  } catch (_) {}
+    const toIssue = boardData.value.spans.filter(s => s.status === 0)
+    const dtoList = toIssue.map(s => spanToDTO(s, 1))
+    await issueSchedules(dtoList)
+    toIssue.forEach(s => { s.status = 1 })
+    _cachedSpans = null
+    await refreshWorkbench()
+    ElMessage.success(`已批量下发 ${dtoList.length} 条`)
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElMessage.error(error?.message || '下发失败')
+    }
+  }
 }
 
 async function handleResetData() {
   try {
-    await ElMessageBox.confirm('确定要重置当前车间所有排产数据吗？此操作不可撤销！', '重置数据', {
-      confirmButtonText: '确认重置', cancelButtonText: '取消', type: 'warning'
+    await ElMessageBox.confirm('确定要清除所有未保存的草稿排产吗？已保存的数据不受影响。', '重置数据', {
+      confirmButtonText: '确认清除', cancelButtonText: '取消', type: 'warning'
     })
-    boardData.value.spans = []
-    ElMessage.success('数据已重置')
+    boardData.value.draftSpans = []
+    ElMessage.success('未保存的数据已清除')
   } catch (_) {}
 }
 </script>

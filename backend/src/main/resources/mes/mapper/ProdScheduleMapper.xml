@@ -7,11 +7,12 @@
     <resultMap id="BaseResultMap" type="mes.entity.ProdSchedule">
             <id property="scheduleId" column="schedule_id" />
             <result property="lineId" column="line_id" />
+            <result property="prodLineId" column="prod_line_id" />
             <result property="scheduleDate" column="schedule_date" />
             <result property="quantity" column="quantity" />
             <result property="workshopId" column="workshop_id" />
             <result property="workshopName" column="workshop_name" />
-            <result property="isOverCapacity" column="is_over_capacity" />
+            <result property="productId" column="product_id" />
             <result property="actualQuantity" column="actual_quantity" />
             <result property="qualifiedQuantity" column="qualified_quantity" />
             <result property="defectQuantity" column="defect_quantity" />
@@ -25,11 +26,107 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        schedule_id,line_id,schedule_date,quantity,workshop_id,workshop_name,
-        is_over_capacity,actual_quantity,qualified_quantity,defect_quantity,status,
-        remark,version,create_by,create_time,update_by,
-        update_time
+        schedule_id,line_id,prod_line_id,schedule_date,quantity,workshop_id,
+        workshop_name,product_id,actual_quantity,qualified_quantity,defect_quantity,
+        status,remark,version,create_by,create_time,
+        update_by,update_time
     </sql>
+
+    <insert id="insertList">
+        INSERT INTO prod_schedule(
+        schedule_id,
+        line_id,
+        prod_line_id,
+        schedule_date,
+        quantity,
+        workshop_id,
+        workshop_name,
+        product_id,
+        status,
+        remark
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+            #{item.scheduleId},
+            #{item.lineId},
+            #{item.prodLineId},
+            #{item.scheduleDate},
+            #{item.quantity},
+            #{item.workshopId},
+            #{item.workshopName},
+            #{item.productId},
+            #{item.status},
+            #{item.remark}
+            )
+        </foreach>
+    </insert>
+    <update id="updateBatch">
+        UPDATE prod_schedule
+        SET
+        quantity = CASE
+        <foreach collection="list" item="item">
+            WHEN schedule_id = #{item.scheduleId} THEN #{item.quantity}
+        </foreach>
+        ELSE quantity
+        END,
+        schedule_date = CASE
+        <foreach collection="list" item="item">
+            WHEN schedule_id = #{item.scheduleId} THEN #{item.scheduleDate}
+        </foreach>
+        ELSE schedule_date
+        END,
+        prod_line_id = CASE
+        <foreach collection="list" item="item">
+            WHEN schedule_id = #{item.scheduleId} THEN #{item.prodLineId}
+        </foreach>
+        ELSE prod_line_id
+        END,
+        status = CASE
+        <foreach collection="list" item="item">
+            WHEN schedule_id = #{item.scheduleId} THEN #{item.status}
+        </foreach>
+        ELSE status
+        END,
+        remark = CASE
+        <foreach collection="list" item="item">
+            WHEN schedule_id = #{item.scheduleId} THEN #{item.remark}
+        </foreach>
+        ELSE remark
+        END,
+        version = version + 1
+        WHERE schedule_id IN
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+            #{item.scheduleId}
+        </foreach>
+    </update>
+    <delete id="deleteByIdAndVersion">
+        DELETE FROM prod_schedule
+        WHERE schedule_id = #{id}
+          AND version = #{version}
+          AND status = 0
+    </delete>
+
+    <select id="selectProdProducts" resultType="mes.vo.prod.ProdScheduleVO">
+        SELECT
+            schedule_id         AS scheduleId,
+            line_id             AS lineId,
+            prod_line_id        AS prodLineId,
+            schedule_date       AS scheduleDate,
+            quantity,
+            workshop_id         AS workshopId,
+            workshop_name       AS workshopName,
+            product_id          AS productId,
+            actual_quantity     AS actualQuantity,
+            qualified_quantity  AS qualifiedQuantity,
+            defect_quantity     AS defectQuantity,
+            status,
+            remark,
+            version
+        FROM prod_schedule
+        WHERE schedule_date >= #{startDate}
+          AND schedule_date &lt;= #{endDate}
+        ORDER BY schedule_date, prod_line_id
+    </select>
 
 
 </mapper>

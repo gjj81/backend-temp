@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import mes.entity.SysMenu;
 import mes.mapper.SysMenuMapper;
 import mes.service.MenuService;
-import mes.vo.MenuTreeVO;
+import mes.vo.base.MenuTreeVO;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

@@ -15,14 +15,16 @@
         <span class="menu-title" :title="hasTitle(item.meta.title)">{{ item.meta.title }}</span>
       </template>
 
-      <sidebar-item
-        v-for="(child, index) in item.children"
-        :key="child.path + index"
-        :is-nest="true"
-        :item="child"
-        :base-path="resolvePath(child.path)"
-        class="nest-menu"
-      />
+      <template #default>
+        <sidebar-item
+          v-for="(child, index) in item.children"
+          :key="child.path + index"
+          :is-nest="true"
+          :item="child"
+          :base-path="resolvePath(child.path)"
+          class="nest-menu"
+        />
+      </template>
     </el-sub-menu>
   </div>
 </template>

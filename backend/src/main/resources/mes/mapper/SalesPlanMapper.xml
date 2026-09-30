@@ -71,6 +71,13 @@
           and status = 0
           and deleted = 0
     </update>
+    <update id="updateStatus">
+        update sales_plan
+        set status = #{status},
+            version = version + 1
+        where plan_id = #{planId}
+          and version = #{version}
+    </update>
 
     <!-- 第三层：交货节点映射 -->
     <resultMap id="DeliveryResultMap" type="mes.vo.sales.SalesPlanDeliveryVO">

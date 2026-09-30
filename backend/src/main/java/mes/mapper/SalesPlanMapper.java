@@ -25,4 +25,6 @@ public interface SalesPlanMapper {
     int updateByPrimaryKey(SalesPlanFormDTO salesPlanUpdateDTO);
 
     int insert(SalesPlanFormDTO salesPlanUpdateDTO);
+
+    int updateStatus(String planId, Integer status, Integer version);
 }

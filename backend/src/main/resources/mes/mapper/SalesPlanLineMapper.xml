@@ -53,6 +53,27 @@
         and version = #{version}
         and deleted = 0
     </update>
+
+    <update id="batchStatusUpdate">
+        UPDATE sales_plan_line
+        SET
+        version = version + 1,
+        status = #{status}
+        WHERE line_id IN
+        <foreach collection="list" item="item" open="(" close=")" separator=",">
+            #{item.lineId}
+        </foreach>
+        AND deleted = 0
+    </update>
+    <update id="updateStatus">
+        UPDATE sales_plan_line
+        SET
+        version = version + 1,
+        status = #{status}
+        WHERE line_id = #{lineId}
+        AND version = #{version}
+    </update>
+
     <insert id="batchInsert">
         INSERT INTO sales_plan_line(
                 line_id,
@@ -92,6 +113,67 @@
         where plan_id = #{planId}
         and deleted = 0
     </select>
+
+
+    <!-- ==================== 排产工作台：月度销售计划产品列表 ==================== -->
+
+    <!-- 结果映射：产品 + 交货节点一对多 -->
+    <resultMap id="ScheduleProductVOMap" type="mes.vo.prod.ScheduleProductVO">
+        <id column="line_id" property="lineId"/>
+        <result column="plan_no" property="planNo"/>
+        <result column="customer" property="customer"/>
+        <result column="product_id" property="productId"/>
+        <result column="product_name" property="productName"/>
+        <result column="total_quantity" property="totalQuantity"/>
+        <result column="plan_month" property="planMonth"/>
+        <result column="forecast_quantity" property="forecastQuantity"/>
+        <result column="opening_inventory" property="openingInventory"/>
+        <result column="line_status" property="lineStatus"/>
+        <result column="scheduledQuantity" property="scheduledQuantity"/>
+        <result column="version" property="version"/>
+        <collection property="deliveryNodes" ofType="mes.vo.prod.ScheduleDeliveryVO">
+            <result column="delivery_date" property="deliveryDate"/>
+            <result column="plan_quantity" property="planQuantity"/>
+        </collection>
+    </resultMap>
+
+    <!-- 工作台产品列表：LEFT JOIN 交货表，返回完整交货节点列表 -->
+    <select id="selectWorkbenchProducts" resultMap="ScheduleProductVOMap">
+        SELECT
+            l.line_id,
+            p.plan_no,
+            p.customer,
+            p.plan_month,
+            l.product_id,
+            l.product_name,
+            l.total_quantity,
+            l.forecast_quantity,
+            l.opening_inventory,
+            l.status       AS line_status,
+            l.version,
+            d.delivery_date,
+            d.plan_quantity,
+            COALESCE(ps.scheduled_quantity, 0) AS scheduledQuantity
+        FROM sales_plan_line l
+                 JOIN sales_plan p ON p.plan_id = l.plan_id AND p.deleted = 0
+                 LEFT JOIN sales_plan_delivery d ON d.line_id = l.line_id AND d.deleted = 0
+                 LEFT JOIN (
+            SELECT line_id, SUM(quantity) AS scheduled_quantity
+            FROM prod_schedule
+            WHERE status >= 1
+            GROUP BY line_id
+        ) ps ON ps.line_id = l.line_id
+                 LEFT JOIN (
+            SELECT line_id, MIN(delivery_date) AS first_delivery
+            FROM sales_plan_delivery
+            WHERE deleted = 0
+            GROUP BY line_id
+        ) fd ON fd.line_id = l.line_id
+        WHERE l.deleted = 0
+          AND l.status IN (1, 2, 3)
+        ORDER BY fd.first_delivery IS NULL, fd.first_delivery
+    </select>
+
 
 
 </mapper>

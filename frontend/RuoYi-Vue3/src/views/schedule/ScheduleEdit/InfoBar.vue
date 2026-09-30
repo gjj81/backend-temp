@@ -2,12 +2,12 @@
   <div class="info-bar">
     <div class="info-main">
       <span class="product-name">{{ lineData.productName }}</span>
-      <el-tag :type="getSpanStatusType(lineData.status)" size="small">
-        {{ getSpanStatusText(lineData.status) }}
+      <el-tag :type="getLineStatusType(lineData.status)" size="small">
+        {{ getLineStatusText(lineData.status) }}
       </el-tag>
       <span class="customer">{{ lineData.customer }}</span>
       <span class="divider">|</span>
-      <span class="qty-info">订单 {{ formatNum(lineData.totalQuantity) }} 已排 {{ formatNum(lineData.scheduledQty || 0) }} 草稿 {{ draftCount }}</span>
+      <span class="qty-info">订单 {{ formatNum(lineData.totalQuantity) }} 已排 {{ formatNum(lineData.scheduledQuantity || 0) }} 草稿 {{ draftCount }}</span>
     </div>
 
     <div v-if="lineData.deliveryList?.length" class="delivery-ref">
@@ -29,7 +29,7 @@
 
 <script setup>
 import { computed } from 'vue'
-import { formatNum, getSpanStatusText, getSpanStatusType } from './utils.js'
+import { formatNum, getLineStatusText, getLineStatusType } from './utils.js'
 
 const props = defineProps({
   lineData: { type: Object, required: true }

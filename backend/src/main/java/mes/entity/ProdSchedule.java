@@ -4,7 +4,7 @@ import java.util.Date;
 import lombok.Data;
 
 /**
- * 生产排程
+ * 生产排程（产品行×产线 多对多，按天排产）
  * @TableName prod_schedule
  */
 @Data
@@ -15,22 +15,27 @@ public class ProdSchedule {
     private String scheduleId;
 
     /**
-     * 关联sales_plan_line
+     * 关联 sales_plan_line（产品行）
      */
     private String lineId;
 
     /**
-     * 排产日期
+     * 排到的产线
+     */
+    private String prodLineId;
+
+    /**
+     * 排产日期（粒度=天）
      */
     private Date scheduleDate;
 
     /**
-     * 排产数量
+     * 当天排产数量（可修改）
      */
     private Integer quantity;
 
     /**
-     * 车间ID（预留）
+     * 车间ID（冗余，便于按车间查询）
      */
     private String workshopId;
 
@@ -40,9 +45,9 @@ public class ProdSchedule {
     private String workshopName;
 
     /**
-     * 是否超产 0否 1是
+     * 产品ID（冗余，便于按产品汇总）
      */
-    private Integer isOverCapacity;
+    private String productId;
 
     /**
      * 实际完成数（预留）
@@ -60,7 +65,7 @@ public class ProdSchedule {
     private Integer defectQuantity;
 
     /**
-     * 0待确认 1已确认 2已完工
+     * 0待确认 1已确认 2生产中 3已完工（终态）
      */
     private Integer status;
 
@@ -108,11 +113,12 @@ public class ProdSchedule {
         ProdSchedule other = (ProdSchedule) that;
         return (this.getScheduleId() == null ? other.getScheduleId() == null : this.getScheduleId().equals(other.getScheduleId()))
             && (this.getLineId() == null ? other.getLineId() == null : this.getLineId().equals(other.getLineId()))
+            && (this.getProdLineId() == null ? other.getProdLineId() == null : this.getProdLineId().equals(other.getProdLineId()))
             && (this.getScheduleDate() == null ? other.getScheduleDate() == null : this.getScheduleDate().equals(other.getScheduleDate()))
             && (this.getQuantity() == null ? other.getQuantity() == null : this.getQuantity().equals(other.getQuantity()))
             && (this.getWorkshopId() == null ? other.getWorkshopId() == null : this.getWorkshopId().equals(other.getWorkshopId()))
             && (this.getWorkshopName() == null ? other.getWorkshopName() == null : this.getWorkshopName().equals(other.getWorkshopName()))
-            && (this.getIsOverCapacity() == null ? other.getIsOverCapacity() == null : this.getIsOverCapacity().equals(other.getIsOverCapacity()))
+            && (this.getProductId() == null ? other.getProductId() == null : this.getProductId().equals(other.getProductId()))
             && (this.getActualQuantity() == null ? other.getActualQuantity() == null : this.getActualQuantity().equals(other.getActualQuantity()))
             && (this.getQualifiedQuantity() == null ? other.getQualifiedQuantity() == null : this.getQualifiedQuantity().equals(other.getQualifiedQuantity()))
             && (this.getDefectQuantity() == null ? other.getDefectQuantity() == null : this.getDefectQuantity().equals(other.getDefectQuantity()))
@@ -131,11 +137,12 @@ public class ProdSchedule {
         int result = 1;
         result = prime * result + ((getScheduleId() == null) ? 0 : getScheduleId().hashCode());
         result = prime * result + ((getLineId() == null) ? 0 : getLineId().hashCode());
+        result = prime * result + ((getProdLineId() == null) ? 0 : getProdLineId().hashCode());
         result = prime * result + ((getScheduleDate() == null) ? 0 : getScheduleDate().hashCode());
         result = prime * result + ((getQuantity() == null) ? 0 : getQuantity().hashCode());
         result = prime * result + ((getWorkshopId() == null) ? 0 : getWorkshopId().hashCode());
         result = prime * result + ((getWorkshopName() == null) ? 0 : getWorkshopName().hashCode());
-        result = prime * result + ((getIsOverCapacity() == null) ? 0 : getIsOverCapacity().hashCode());
+        result = prime * result + ((getProductId() == null) ? 0 : getProductId().hashCode());
         result = prime * result + ((getActualQuantity() == null) ? 0 : getActualQuantity().hashCode());
         result = prime * result + ((getQualifiedQuantity() == null) ? 0 : getQualifiedQuantity().hashCode());
         result = prime * result + ((getDefectQuantity() == null) ? 0 : getDefectQuantity().hashCode());
@@ -157,11 +164,12 @@ public class ProdSchedule {
         sb.append("Hash = ").append(hashCode());
         sb.append(", scheduleId=").append(scheduleId);
         sb.append(", lineId=").append(lineId);
+        sb.append(", prodLineId=").append(prodLineId);
         sb.append(", scheduleDate=").append(scheduleDate);
         sb.append(", quantity=").append(quantity);
         sb.append(", workshopId=").append(workshopId);
         sb.append(", workshopName=").append(workshopName);
-        sb.append(", isOverCapacity=").append(isOverCapacity);
+        sb.append(", productId=").append(productId);
         sb.append(", actualQuantity=").append(actualQuantity);
         sb.append(", qualifiedQuantity=").append(qualifiedQuantity);
         sb.append(", defectQuantity=").append(defectQuantity);

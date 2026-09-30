@@ -1,9 +1,13 @@
 package mes.mapper;
 
 import mes.dto.sales.SalesPlanFormLineDTO;
+import mes.dto.sales.SalesPlanLineStatusDTO;
+import mes.vo.prod.ScheduleDeliveryVO;
+import mes.vo.prod.ScheduleProductVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -26,5 +30,14 @@ public interface SalesPlanLineMapper {
     int batchInsert(@Param("list") List<SalesPlanFormLineDTO> salesPlanLineList);
     int insert(SalesPlanFormLineDTO salesPlanLine);
 
+    // ==================== 排产工作台：月度销售计划产品列表 ====================
 
+    /**
+     * 工作台产品列表：销售计划行+计划主表，按最早交货日排序
+     */
+    List<ScheduleProductVO> selectWorkbenchProducts();
+
+
+    int batchStatusUpdate(@Param("list") List<SalesPlanLineStatusDTO> lineStatusList,int status);
+    int updateStatus(@Param("lineId") String lineId, @Param("status") int status, @Param("version") int version);
 }

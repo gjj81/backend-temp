@@ -117,7 +117,7 @@ import {
 
 // ==================== 全局状态 ====================
 const planList = ref([])
-const yearMonth = ref('2026-05')
+const yearMonth = ref('2026-10')
 const activeView = ref('edit')
 
 const activeComponent = computed(() => 

@@ -1,49 +1,40 @@
 import request from '@/utils/request'
 
-export function listBoard(params) {
+export function listWorkbenchProducts() {
   return request({
-    url: '/api/schedule/board',
+    url: '/api/prod-schedule/workbench/list',
+    method: 'get'
+  })
+}
+
+export function listProdProducts(startDate, endDate) {
+  return request({
+    url: '/api/prod-schedule/prod/list',
     method: 'get',
-    params
+    params: { startDate, endDate }
   })
 }
 
-export function addSpan(data) {
+export function saveSchedules(data) {
   return request({
-    url: '/api/schedule/span',
+    url: '/api/prod-schedule/prod/add',
     method: 'post',
     data
   })
 }
 
-export function updateSpan(data) {
+export function issueSchedules(data) {
   return request({
-    url: '/api/schedule/span',
+    url: '/api/prod-schedule/prod/update',
     method: 'put',
     data
   })
 }
 
-export function deleteSpan(spanId, version) {
+export function deleteSchedule(id, version) {
   return request({
-    url: `/api/schedule/span/${spanId}`,
+    url: '/api/prod-schedule/prod/delete',
     method: 'delete',
-    params: { version }
-  })
-}
-
-export function batchIssueSpans(spanIds) {
-  return request({
-    url: '/api/schedule/batch-issue',
-    method: 'post',
-    data: spanIds
-  })
-}
-
-export function moveSpan(data) {
-  return request({
-    url: '/api/schedule/span/move',
-    method: 'put',
-    data
+    params: { id, version }
   })
 }

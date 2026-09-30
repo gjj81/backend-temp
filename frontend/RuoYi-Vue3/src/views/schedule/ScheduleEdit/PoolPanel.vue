@@ -18,22 +18,23 @@
           ></span>
           <span class="product-name">{{ line.productName }}</span>
           <el-tag 
-            :type="getSpanStatusType(line.status)" 
+            :type="getLineStatusType(line.status)" 
             size="small" 
             effect="plain"
           >
-            {{ getSpanStatusText(line.status) }}
+            {{ getLineStatusText(line.status) }}
           </el-tag>
         </div>
 
         <div class="card-meta">
           <span>{{ line.customer }}</span>
+          <span v-if="line.planMonth">创建月份 {{ line.planMonth }}</span>
           <span>预测 {{ formatNum(line.forecastQuantity) }}</span>
           <span>库存 {{ formatNum(line.openingInventory) }}</span>
         </div>
 
         <div class="card-qty">
-          订单 {{ formatNum(line.totalQuantity) }} 已排 {{ formatNum(line.scheduledQty || 0) }} 剩余 {{ formatNum((line.totalQuantity || 0) - (line.scheduledQty || 0)) }}
+          订单 {{ formatNum(line.totalQuantity) }} 已排 {{ formatNum(line.scheduledQuantity || 0) }} 剩余 {{ formatNum((line.totalQuantity || 0) - (line.scheduledQuantity || 0)) }}
         </div>
 
         <div v-if="line.deliveryList?.length" class="delivery-chips">
@@ -59,7 +60,7 @@
 </template>
 
 <script setup>
-import { formatNum, getSpanStatusText, getSpanStatusType } from './utils.js'
+import { formatNum, getLineStatusText, getLineStatusType } from './utils.js'
 
 defineProps({
   lines: { type: Array, default: () => [] },
@@ -117,7 +118,8 @@ function isUrgent(dateStr) {
 .status-dot.status-0 { background: #909399; }
 .status-dot.status-1 { background: #409eff; }
 .status-dot.status-2 { background: #e6a23c; }
-.status-dot.status-3 { background: #67c23a; }
+.status-dot.status-3 { background: #f56c6c; }
+.status-dot.status-4 { background: #67c23a; }
 .product-name { font-size: 13px; font-weight: 600; color: #303133; }
 .card-meta { display: flex; gap: 10px; margin-bottom: 6px; font-size: 11px; color: #909399; flex-wrap: wrap; }
 .card-qty { font-size: 12px; color: #606266; margin-bottom: 6px; line-height: 1.5; }

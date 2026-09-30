@@ -31,7 +31,7 @@
       <GanttChart
         :spans="filteredSpans"
         :prod-lines="boardData.prodLines || []"
-        :year-month="yearMonth"
+        :date-range="dateRange"
         :selected-line="selectedLine"
         :selected-span-id="selectedSpan?.spanId"
         :delivery-dates="deliveryDateSet"
@@ -60,7 +60,7 @@ import InfoBar from './InfoBar.vue'
 
 const props = defineProps({
   boardData: { type: Object, default: () => ({}) },
-  yearMonth: { type: String, default: '' },
+  dateRange: { type: Array, default: () => [] },
   workshopId: { type: [Number, String], default: null },
   customerFilter: { type: String, default: '' }
 })
@@ -71,7 +71,9 @@ const selectedLineId = ref(null)
 const selectedSpan = ref(null)
 
 const poolLines = computed(() => props.boardData.poolLines || [])
-const allSpans = computed(() => props.boardData.spans || [])
+const allSpans = computed(() => {
+  return [...(props.boardData.spans || []), ...(props.boardData.draftSpans || [])]
+})
 
 const filteredPoolLines = computed(() => {
   let result = [...poolLines.value]
@@ -132,25 +134,13 @@ function handleMoveSpan(data) {
 }
 
 function handleSaveSpan(data) {
-  const spanIndex = allSpans.value.findIndex(s => s.spanId === data.spanId)
-  if (spanIndex !== -1) {
-    const span = allSpans.value[spanIndex]
-    const wasDraft = span.status === 0
-
-    Object.assign(span, {
-      dailyQuantity: data.dailyQuantity,
-      days: data.days || 1,
-      startDate: data.startDate,
-      _isNew: false,
-      status: wasDraft ? 1 : span.status
-    })
-
-    if (wasDraft) {
-      span.endDate = span.startDate
-      span.days = 1
-    }
-
-    emit('save', { type: 'span:update', data: { ...span } })
+  const span = allSpans.value.find(s => s.spanId === data.spanId)
+  if (span) {
+    span.dailyQuantity = data.dailyQuantity
+    span.days = data.days || 1
+    span.startDate = data.startDate
+    span.version = data.version || span.version
+    emit('save', { type: 'span:save', data: { spanId: span.spanId } })
   }
 }
 
@@ -160,15 +150,12 @@ function handleDeleteSpan(data) {
 }
 
 function handleIssueSpan(data) {
-  const spanIndex = allSpans.value.findIndex(s => s.spanId === data.spanId)
-  if (spanIndex !== -1) {
-    const span = allSpans.value[spanIndex]
-    if (span.status === 1) {
-      span.status = 2
-      ElMessage.success('排产块已下发到生产')
-      emit('save', { type: 'span:update', data: { ...span } })
+  const span = allSpans.value.find(s => s.spanId === data.spanId)
+  if (span) {
+    if (span.status === 0) {
+      emit('save', { type: 'span:issue', data: { spanId: span.spanId, version: data.version || span.version } })
     } else {
-      ElMessage.warning('仅"未下发"状态的块可以下发')
+      ElMessage.warning('仅"待下发"状态的排产块可以下发')
     }
   }
   selectedSpan.value = null
