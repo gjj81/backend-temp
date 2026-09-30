@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mes.mapper.ProdReportMapper">
+
+    <resultMap id="BaseResultMap" type="mes.entity.ProdReport">
+            <id property="reportId" column="report_id" />
+            <result property="scheduleId" column="schedule_id" />
+            <result property="orderKind" column="order_kind" />
+            <result property="reportDate" column="report_date" />
+            <result property="quantity" column="quantity" />
+            <result property="qualifiedQuantity" column="qualified_quantity" />
+            <result property="defectQuantity" column="defect_quantity" />
+            <result property="reporter" column="reporter" />
+            <result property="remark" column="remark" />
+            <result property="version" column="version" />
+            <result property="createBy" column="create_by" />
+            <result property="createTime" column="create_time" />
+            <result property="updateBy" column="update_by" />
+            <result property="updateTime" column="update_time" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        report_id,schedule_id,order_kind,report_date,quantity,qualified_quantity,
+        defect_quantity,reporter,remark,version,create_by,
+        create_time,update_by,update_time
+    </sql>
+
+</mapper>
